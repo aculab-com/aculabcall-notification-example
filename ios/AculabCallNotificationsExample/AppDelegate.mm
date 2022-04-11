@@ -1,4 +1,5 @@
 #import "AppDelegate.h"
+#import "RNCallKeep.h"
 
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
@@ -104,5 +105,14 @@
 }
 
 #endif
+
+- (BOOL)application:(UIApplication *)application
+        continueUserActivity:(nonnull NSUserActivity *)userActivity
+        restorationHandler: (nonnull void (^)(NSArray<id<UIUserActivityRestoring>> *_Nullable))restorationHandler
+{
+  return [RNCallKeep application:application
+            continueUserActivity:userActivity
+            restorationHandler:restorationHandler];
+}
 
 @end
