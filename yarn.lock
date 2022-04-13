@@ -5978,6 +5978,11 @@
     "prop-types" "^15.7.2"
     "yargs" "^16.1.1"
 
+"react-native-voip-push-notification@^3.3.0":
+  "integrity" "sha512-A19jiwU1M/3UReUkfC68X2bW4c3mu27kuX2Kn/a1Z6clj0hVVLYi4Vk5zAboamaKiiLTXN7rdyFshkTIhD3u9g=="
+  "resolved" "https://registry.npmjs.org/react-native-voip-push-notification/-/react-native-voip-push-notification-3.3.0.tgz"
+  "version" "3.3.0"
+
 "react-native-webrtc@*", "react-native-webrtc@^1.100.0":
   "integrity" "sha512-sBLl8Ihj3xfYn0NZJdDxelB/dZ422FWg/kcLdSw6Wk4eM3MeNW3iFwVsqg2dLzeDnuoQ06i7hOdtP7pGAiKsug=="
   "resolved" "https://registry.npmjs.org/react-native-webrtc/-/react-native-webrtc-1.100.0.tgz"
