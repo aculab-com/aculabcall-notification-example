@@ -20,6 +20,8 @@ import {CallButton} from './components/CallButton';
 import {RoundButton} from './components/RoundButton';
 import {useNavigation} from '@react-navigation/native';
 
+import VoipPushNotification from 'react-native-voip-push-notification';
+
 const MainCallButtons = (props: any) => {
   return (
     <View style={styles.callButtonsContainer}>
@@ -379,11 +381,86 @@ class AcuCall extends AculabCall {
   componentDidMount() {
     this.register();
     this.initializeCallKeep('AculabCall Example');
+    this.initializeVoipNotifications();
   }
 
   componentWillUnmount() {
     this.unregister();
     this.destroyListeners();
+    this.unregisterVoipNotifications();
+  }
+
+  /**
+   * iOS ONLY\
+   * Run this function to unregister VoiP Push Notifications for iOS.
+   */
+  unregisterVoipNotifications() {
+    VoipPushNotification.removeEventListener('register');
+    VoipPushNotification.removeEventListener('notification');
+    VoipPushNotification.removeEventListener('didLoadWithEvents');
+  }
+
+  /**
+   * iOS ONLY\
+   * Run this function to register VoiP Push Notifications for iOS.
+   */
+  initializeVoipNotifications() {
+    // --- NOTE: You still need to subscribe / handle the rest events as usuall.
+    // --- This is just a helper whcih cache and propagate early fired events if and only if for
+    // --- "the native events which DID fire BEFORE js bridge is initialed",
+    // --- it does NOT mean this will have events each time when the app reopened.
+
+    // ===== Step 1: subscribe `register` event =====
+    // --- this.onVoipPushNotificationRegistered
+    VoipPushNotification.addEventListener('register', token => {
+      // --- send token to your apn provider server
+      console.log('[ Push Notifications ]', 'Token:', token);
+    });
+
+    // ===== Step 2: subscribe `notification` event =====
+    // --- this.onVoipPushNotificationiReceived
+    VoipPushNotification.addEventListener('notification', notification => {
+      // --- when receive remote voip push, register your VoIP client, show local notification ... etc
+      this.setState({callUuid: notification.uuid});
+      console.log('[ Push Notifications ]', 'Notification:', notification);
+      // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
+      VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
+    });
+
+    // ===== Step 3: subscribe `didLoadWithEvents` event =====
+    VoipPushNotification.addEventListener('didLoadWithEvents', events => {
+      // --- this will fire when there are events occured before js bridge initialized
+      // --- use this event to execute your event handler manually by event type
+      console.log('[ Push Notifications ]', 'Events:', events);
+
+      if (!events || !Array.isArray(events) || events.length < 1) {
+        return;
+      }
+      for (let voipPushEvent of events) {
+        let {name, data} = voipPushEvent;
+        console.log('[ Push Notifications ]', 'Event Name:', name);
+        if (
+          name ===
+          VoipPushNotification.RNVoipPushRemoteNotificationsRegisteredEvent
+        ) {
+          // this.onVoipPushNotificationRegistered(data);
+          console.log('[ Push Notifications ]', 'Event Registered Data:', data);
+        } else if (
+          name ===
+          VoipPushNotification.RNVoipPushRemoteNotificationReceivedEvent
+        ) {
+          // this.onVoipPushNotificationiReceived(data);
+          console.log('[ Push Notifications ]', 'Event Received data', data);
+          // this.setState({callUuid: data.uuid});
+        }
+      }
+    });
+
+    // ===== Step 4: register =====
+    // --- it will be no-op if you have subscribed before (like in native side)
+    // --- but will fire `register` event if we have latest cashed voip token ( it may be empty if no token at all )
+    VoipPushNotification.registerVoipToken(); // --- register token
+    console.log('[ AcuCall ]', 'VoiP Push Notifications Initialized:');
   }
 
   CallHeadComponent = (): any => {
