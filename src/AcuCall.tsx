@@ -6,6 +6,7 @@ import {
   ScrollView,
   SafeAreaView,
   Image,
+  Platform,
 } from 'react-native';
 import {styles, COLOURS} from './styles';
 import {RTCView} from 'react-native-webrtc';
@@ -19,6 +20,7 @@ import {KeypadButton} from './components/KeypadButton';
 import {CallButton} from './components/CallButton';
 import {RoundButton} from './components/RoundButton';
 import {useNavigation} from '@react-navigation/native';
+// import type {AculabCallParam} from './types';
 
 import VoipPushNotification from 'react-native-voip-push-notification';
 
@@ -252,6 +254,7 @@ const DisplayClientCall = (props: any) => {
       return (
         <View style={styles.vidview}>
           <RTCView
+            // @ts-ignore
             streamURL={props.aculabCall.state.remoteStream.toURL()}
             style={styles.rtcview}
           />
@@ -272,6 +275,7 @@ const DisplayClientCall = (props: any) => {
           </View>
           <View style={styles.rtc}>
             <RTCView
+              // @ts-ignore
               streamURL={props.aculabCall.state.localStream.toURL()}
               style={styles.rtcselfview}
             />
@@ -297,11 +301,13 @@ const DisplayClientCall = (props: any) => {
       return (
         <View style={styles.vidview}>
           <RTCView
+            // @ts-ignore
             streamURL={props.aculabCall.state.remoteStream.toURL()}
             style={styles.rtcview}
           />
           <View style={styles.rtc}>
             <RTCView
+              // @ts-ignore
               streamURL={props.aculabCall.state.localStream.toURL()}
               style={styles.rtcselfview}
             />
@@ -381,13 +387,17 @@ class AcuCall extends AculabCall {
   componentDidMount() {
     this.register();
     this.initializeCallKeep('AculabCall Example');
-    this.initializeVoipNotifications();
+    if (Platform.OS === 'ios') {
+      this.initializeVoipNotifications();
+    }
   }
 
   componentWillUnmount() {
     this.unregister();
     this.destroyListeners();
-    this.unregisterVoipNotifications();
+    if (Platform.OS === 'ios') {
+      this.unregisterVoipNotifications();
+    }
   }
 
   /**
@@ -405,8 +415,8 @@ class AcuCall extends AculabCall {
    * Run this function to register VoiP Push Notifications for iOS.
    */
   initializeVoipNotifications() {
-    // --- NOTE: You still need to subscribe / handle the rest events as usuall.
-    // --- This is just a helper whcih cache and propagate early fired events if and only if for
+    // --- NOTE: You still need to subscribe / handle the rest events as usual.
+    // --- This is just a helper which cache and propagate early fired events if and only if for
     // --- "the native events which DID fire BEFORE js bridge is initialed",
     // --- it does NOT mean this will have events each time when the app reopened.
 
@@ -418,7 +428,7 @@ class AcuCall extends AculabCall {
     });
 
     // ===== Step 2: subscribe `notification` event =====
-    // --- this.onVoipPushNotificationiReceived
+    // --- this.onVoipPushNotificationReceived
     VoipPushNotification.addEventListener('notification', notification => {
       // --- when receive remote voip push, register your VoIP client, show local notification ... etc
       this.setState({callUuid: notification.uuid});
@@ -429,7 +439,7 @@ class AcuCall extends AculabCall {
 
     // ===== Step 3: subscribe `didLoadWithEvents` event =====
     VoipPushNotification.addEventListener('didLoadWithEvents', events => {
-      // --- this will fire when there are events occured before js bridge initialized
+      // --- this will fire when there are events occurred before js bridge initialized
       // --- use this event to execute your event handler manually by event type
       console.log('[ Push Notifications ]', 'Events:', events);
 
@@ -441,15 +451,17 @@ class AcuCall extends AculabCall {
         console.log('[ Push Notifications ]', 'Event Name:', name);
         if (
           name ===
-          VoipPushNotification.RNVoipPushRemoteNotificationsRegisteredEvent
+          (VoipPushNotification as any) // ignore missing type in the package
+            .RNVoipPushRemoteNotificationsRegisteredEvent
         ) {
           // this.onVoipPushNotificationRegistered(data);
           console.log('[ Push Notifications ]', 'Event Registered Data:', data);
         } else if (
           name ===
-          VoipPushNotification.RNVoipPushRemoteNotificationReceivedEvent
+          (VoipPushNotification as any) // ignore missing type in the package
+            .RNVoipPushRemoteNotificationReceivedEvent
         ) {
-          // this.onVoipPushNotificationiReceived(data);
+          // this.onVoipPushNotificationReceived(data);
           console.log('[ Push Notifications ]', 'Event Received data', data);
           // this.setState({callUuid: data.uuid});
         }
