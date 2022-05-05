@@ -1,4 +1,4 @@
-type AculabCallParam = {
+export type AculabCallParam = {
   webRTCAccessKey: string;
   webRTCToken: string;
   cloudRegionId: string;
@@ -21,3 +21,16 @@ export type RoundButtonProps = {
   iconName: string;
   onPress: () => void;
 };
+
+export type AuthContextTypes = {
+  signUp: (username: string) => void;
+  signOut: () => void;
+};
+
+export interface User {
+  id?: number;
+  username: string;
+  deviceToken?: string;
+  platform?: string;
+  webrtcToken: string;
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,11 @@ import {MenuButton} from './components/MenuButton';
 import {KeypadButton} from './components/KeypadButton';
 import {CallButton} from './components/CallButton';
 import {RoundButton} from './components/RoundButton';
-import {useNavigation} from '@react-navigation/native';
-// import type {AculabCallParam} from './types';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 import VoipPushNotification from 'react-native-voip-push-notification';
+import {AuthContext} from './App';
+import { deleteUser, updateUser } from './middleware';
 
 const MainCallButtons = (props: any) => {
   return (
@@ -371,16 +372,33 @@ const CallButtonsHandler = (props: any) => {
   }
 };
 
-const RegisterButton = () => {
-  const navigation = useNavigation();
+const RegisterButton = (props: any) => {
+  const {signOut} = useContext(AuthContext);
   return (
     <View style={styles.registrationButton}>
-      <RoundButton
-        iconName={'cog-outline'}
-        onPress={() => navigation.goBack()}
+      <CallButton
+        title={'log out'}
+        colour={COLOURS.CALLING_TEXT}
+        onPress={() => {
+          signOut();
+          deleteUser({
+            username: props.aculabCall.props.registerClientId,
+            webrtcToken: props.aculabCall.props.webRTCToken,
+          });
+          props.aculabCall.unregister();
+        }}
       />
     </View>
   );
+};
+
+const clearStorage = async () => {
+  try {
+    await EncryptedStorage.clear();
+    // Congrats! You've just cleared the device storage!
+  } catch (error) {
+    // There was an error on the native side
+  }
 };
 
 class AcuCall extends AculabCall {
@@ -398,6 +416,11 @@ class AcuCall extends AculabCall {
     if (Platform.OS === 'ios') {
       this.unregisterVoipNotifications();
     }
+  }
+
+  unregister() {
+    super.unregister();
+    clearStorage();
   }
 
   /**
@@ -424,6 +447,16 @@ class AcuCall extends AculabCall {
     // --- this.onVoipPushNotificationRegistered
     VoipPushNotification.addEventListener('register', token => {
       // --- send token to your apn provider server
+      // The timeout is not needed is server is using database but with writing into files the server resets itself.
+      // Therefore, this delay makes time for server to reset after registering user request.
+      setTimeout(() => {
+        updateUser({
+          username: this.props.registerClientId,
+          platform: Platform.OS,
+          webrtcToken: this.props.webRTCToken,
+          deviceToken: token,
+        });
+      }, 3000);
       console.log('[ Push Notifications ]', 'Token:', token);
     });
 
@@ -495,7 +528,11 @@ class AcuCall extends AculabCall {
             </Text>
           )}
         </View>
-        {this.state.callState === 'idle' ? <RegisterButton /> : <View />}
+        {this.state.callState === 'idle' ? (
+          <RegisterButton aculabCall={this} />
+        ) : (
+          <View />
+        )}
       </View>
     );
   };
