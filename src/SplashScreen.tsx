@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React from 'react';
-import {View, Text, ScrollView} from 'react-native';
-import {styles} from './styles';
+import { View, Text, ScrollView } from 'react-native';
+import { styles } from './styles';
 
 export const SplashScreen = () => {
   return (

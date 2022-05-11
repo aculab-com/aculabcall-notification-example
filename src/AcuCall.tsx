@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -8,22 +8,25 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import {styles, COLOURS} from './styles';
-import {RTCView} from 'react-native-webrtc';
+import { styles, COLOURS } from './styles';
+import { RTCView } from 'react-native-webrtc';
 import {
   AculabCall,
   turnOnSpeaker,
   deleteSpaces,
+  showAlert,
 } from 'react-native-aculab-client';
-import {MenuButton} from './components/MenuButton';
-import {KeypadButton} from './components/KeypadButton';
-import {CallButton} from './components/CallButton';
-import {RoundButton} from './components/RoundButton';
+import { MenuButton } from './components/MenuButton';
+import { KeypadButton } from './components/KeypadButton';
+import { CallButton } from './components/CallButton';
+import { RoundButton } from './components/RoundButton';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
 import VoipPushNotification from 'react-native-voip-push-notification';
-import {AuthContext} from './App';
-import { deleteUser, updateUser } from './middleware';
+import { AuthContext } from './App';
+import { deleteUser, sendNotification, updateUser } from './middleware';
+
+import RNCallKeep from 'react-native-callkeep';
 
 const MainCallButtons = (props: any) => {
   return (
@@ -38,8 +41,8 @@ const MainCallButtons = (props: any) => {
         colour={COLOURS.SPEAKER_BUTTON}
         onPress={() =>
           props.aculabCall.setState(
-            {speakerOn: !props.aculabCall.state.speakerOn},
-            () => turnOnSpeaker(props.aculabCall.state.speakerOn),
+            { speakerOn: !props.aculabCall.state.speakerOn },
+            () => turnOnSpeaker(props.aculabCall.state.speakerOn)
           )
         }
       />
@@ -149,16 +152,16 @@ const ClientCallButtons = (props: any) => {
         iconName={videoIcon}
         onPress={() =>
           props.aculabCall.setState(
-            {camera: !props.aculabCall.state.camera},
-            () => props.aculabCall.mute(),
+            { camera: !props.aculabCall.state.camera },
+            () => props.aculabCall.mute()
           )
         }
       />
       <RoundButton
         iconName={audioIcon}
         onPress={() =>
-          props.aculabCall.setState({mic: !props.aculabCall.state.mic}, () =>
-            props.aculabCall.mute(),
+          props.aculabCall.setState({ mic: !props.aculabCall.state.mic }, () =>
+            props.aculabCall.mute()
           )
         }
       />
@@ -175,7 +178,7 @@ const CallOutComponent = (props: any) => {
           style={styles.input}
           placeholder={'example: webrtcdemo'}
           placeholderTextColor={COLOURS.INPUT_PLACEHOLDER}
-          onChangeText={text =>
+          onChangeText={(text) =>
             props.aculabCall.setState({
               serviceName: deleteSpaces(text),
             })
@@ -189,8 +192,8 @@ const CallOutComponent = (props: any) => {
             props.aculabCall.getCallUuid(() =>
               props.aculabCall.startCall(
                 'service',
-                props.aculabCall.state.serviceName,
-              ),
+                props.aculabCall.state.serviceName
+              )
             )
           }
         />
@@ -201,7 +204,7 @@ const CallOutComponent = (props: any) => {
           style={styles.input}
           placeholder={'example: anna123'}
           placeholderTextColor={COLOURS.INPUT_PLACEHOLDER}
-          onChangeText={text =>
+          onChangeText={(text) =>
             props.aculabCall.setState({
               callClientId: deleteSpaces(text),
             })
@@ -210,14 +213,22 @@ const CallOutComponent = (props: any) => {
         />
         <MenuButton
           title={'Call Client'}
-          onPress={() =>
-            props.aculabCall.getCallUuid(() =>
-              props.aculabCall.startCall(
-                'client',
-                props.aculabCall.state.callClientId,
-              ),
-            )
-          }
+          onPress={() => {
+            if (Platform.OS !== 'ios') {
+              // if (props.aculabCall.state.callUuid === '') {
+              props.aculabCall.getCallUuid(() => notificationHandler(props));
+              // } else {
+              //   notificationHandler(props);
+              // }
+            } else {
+              props.aculabCall.getCallUuid(() =>
+                props.aculabCall.startCall(
+                  'client',
+                  props.aculabCall.state.callClientId
+                )
+              );
+            }
+          }}
         />
       </View>
     </View>
@@ -320,7 +331,13 @@ const DisplayClientCall = (props: any) => {
 };
 
 const CallDisplayHandler = (props: any) => {
-  if (props.aculabCall.state.callState === 'incoming call') {
+  if (
+    props.aculabCall.state.callState === 'incoming call' ||
+    (props.aculabCall.state.incomingUI &&
+      props.aculabCall.state.callUIInteraction === 'answered') ||
+    (props.aculabCall.state.incomingUI &&
+      props.aculabCall.state.callUIInteraction === 'none')
+  ) {
     return (
       <View style={styles.incomingContainer}>
         <View style={styles.center}>
@@ -372,8 +389,8 @@ const CallButtonsHandler = (props: any) => {
   }
 };
 
-const RegisterButton = (props: any) => {
-  const {signOut} = useContext(AuthContext);
+const LogOutButton = (props: any) => {
+  const { signOut } = useContext(AuthContext);
   return (
     <View style={styles.registrationButton}>
       <CallButton
@@ -396,8 +413,37 @@ const clearStorage = async () => {
   try {
     await EncryptedStorage.clear();
     // Congrats! You've just cleared the device storage!
-  } catch (error) {
-    // There was an error on the native side
+  } catch (err) {
+    console.error('[ AcuCall ]', 'clearStorage error', err);
+  }
+};
+
+const notificationHandler = async (props: any) => {
+  let response;
+  response = await sendNotification({
+    uuid: props.aculabCall.state.callUuid,
+    caller: props.aculabCall.props.registerClientId,
+    callee: props.aculabCall.state.callClientId,
+  });
+
+  try {
+    if (response.message === 'success') {
+      // this delay is needed so the app has time to initialize on the callee side
+      // after receiving notification (iOS)
+      setTimeout(() => {
+        props.aculabCall.startCall(
+          'client',
+          props.aculabCall.state.callClientId
+        );
+      }, 7000);
+    } else if (response.message === 'calling_web_interface') {
+      props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
+    } else {
+      // console.log('resp', response);
+      showAlert('', response.message);
+    }
+  } catch (err) {
+    console.error('[ notificationHandler ]', err);
   }
 };
 
@@ -418,9 +464,48 @@ class AcuCall extends AculabCall {
     }
   }
 
+  componentDidUpdate() {
+    if (
+      this.state.callUIInteraction === 'answered' &&
+      this.state.callState === 'incoming call'
+    ) {
+      this.answerCall();
+    }
+    if (
+      this.state.callUIInteraction === 'rejected' &&
+      this.state.callState === 'incoming call'
+    ) {
+      this.endCall();
+    }
+  }
+
   unregister() {
     super.unregister();
     clearStorage();
+  }
+
+  /**
+   * if the call does not connect withing the time after call being answered it terminates callkeep
+   */
+  async terminateInboundUIIfNotCall() {
+    setTimeout(() => {
+      if (this.state.callState === 'idle' && this.state.callKeepCallActive) {
+        RNCallKeep.endCall(this.state.callUuid as string);
+      }
+    }, 10000);
+  }
+
+  /**
+   * Set AculabCall states for VoIP Notification
+   * @param <string> uuid for the call
+   */
+  setStatesNotificationCall(uuid: string) {
+    this.setState({ callUuid: uuid });
+    this.setState({ incomingUI: true });
+    this.setState({ callKeepCallActive: true });
+    this.setState({ callUIInteraction: 'none' });
+    this.setState({ notificationCall: true });
+    this.terminateInboundUIIfNotCall();
   }
 
   /**
@@ -445,7 +530,7 @@ class AcuCall extends AculabCall {
 
     // ===== Step 1: subscribe `register` event =====
     // --- this.onVoipPushNotificationRegistered
-    VoipPushNotification.addEventListener('register', token => {
+    VoipPushNotification.addEventListener('register', (token) => {
       // --- send token to your apn provider server
       // The timeout is not needed is server is using database but with writing into files the server resets itself.
       // Therefore, this delay makes time for server to reset after registering user request.
@@ -457,45 +542,48 @@ class AcuCall extends AculabCall {
           deviceToken: token,
         });
       }, 3000);
-      console.log('[ Push Notifications ]', 'Token:', token);
+      // console.log('[ Push Notifications ]', 'Token:', token);
     });
 
     // ===== Step 2: subscribe `notification` event =====
     // --- this.onVoipPushNotificationReceived
-    VoipPushNotification.addEventListener('notification', notification => {
+    VoipPushNotification.addEventListener('notification', (notification) => {
       // --- when receive remote voip push, register your VoIP client, show local notification ... etc
-      this.setState({callUuid: notification.uuid});
+      this.setStatesNotificationCall(notification.uuid);
       console.log('[ Push Notifications ]', 'Notification:', notification);
       // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
       VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
     });
 
     // ===== Step 3: subscribe `didLoadWithEvents` event =====
-    VoipPushNotification.addEventListener('didLoadWithEvents', events => {
+    VoipPushNotification.addEventListener('didLoadWithEvents', (events) => {
       // --- this will fire when there are events occurred before js bridge initialized
       // --- use this event to execute your event handler manually by event type
-      console.log('[ Push Notifications ]', 'Events:', events);
+      // console.log('[ Push Notifications ]', 'Events:', events);
 
       if (!events || !Array.isArray(events) || events.length < 1) {
         return;
       }
       for (let voipPushEvent of events) {
-        let {name, data} = voipPushEvent;
-        console.log('[ Push Notifications ]', 'Event Name:', name);
+        let { name, data } = voipPushEvent;
+        // console.log('[ Push Notifications ]', 'Event Name:', name);
         if (
           name ===
           (VoipPushNotification as any) // ignore missing type in the package
             .RNVoipPushRemoteNotificationsRegisteredEvent
         ) {
           // this.onVoipPushNotificationRegistered(data);
-          console.log('[ Push Notifications ]', 'Event Registered Data:', data);
+          // console.log('[ Push Notifications ]', 'Event Registered Data:', data);
         } else if (
           name ===
           (VoipPushNotification as any) // ignore missing type in the package
             .RNVoipPushRemoteNotificationReceivedEvent
         ) {
+          if (data.uuid) {
+            this.setStatesNotificationCall(data.uuid);
+          }
           // this.onVoipPushNotificationReceived(data);
-          console.log('[ Push Notifications ]', 'Event Received data', data);
+          // console.log('[ Push Notifications ]', 'Event Received data', data);
           // this.setState({callUuid: data.uuid});
         }
       }
@@ -508,7 +596,7 @@ class AcuCall extends AculabCall {
     console.log('[ AcuCall ]', 'VoiP Push Notifications Initialized:');
   }
 
-  CallHeadComponent = (): any => {
+  CallHeadComponent = () => {
     return (
       <View style={styles.row}>
         <View style={styles.callHead}>
@@ -529,7 +617,7 @@ class AcuCall extends AculabCall {
           )}
         </View>
         {this.state.callState === 'idle' ? (
-          <RegisterButton aculabCall={this} />
+          <LogOutButton aculabCall={this} />
         ) : (
           <View />
         )}

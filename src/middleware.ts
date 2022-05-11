@@ -1,14 +1,16 @@
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import EncryptedStorage from 'react-native-encrypted-storage';
-import type {User} from './types';
+import type { Notification, User } from './types';
 
 const platform = Platform.OS;
 
+const URL_BASE = 'http://192.168.1.152:3500/';
+
 export const registerUser = async (username: string): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
-  const url = 'http://192.168.1.152:3500/users/';
+  const url = `${URL_BASE}users/`;
   const headers = {
-    Accept: 'application/json',
+    'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
   const body = JSON.stringify({
@@ -22,14 +24,14 @@ export const registerUser = async (username: string): Promise<any> => {
     body: body,
     headers: headers,
   })
-    .then(res => {
+    .then((res) => {
       var blob = res.json();
       return blob;
     })
-    .then(data => {
+    .then((data) => {
       return data;
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('[ registerUser ]', error);
     });
   return response;
@@ -37,9 +39,9 @@ export const registerUser = async (username: string): Promise<any> => {
 
 export const updateUser = async (user: User): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
-  const url = 'http://192.168.1.152:3500/users/';
+  const url = `${URL_BASE}users/`;
   const headers = {
-    Accept: 'application/json',
+    'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
   const body = JSON.stringify({
@@ -55,14 +57,14 @@ export const updateUser = async (user: User): Promise<any> => {
     body: body,
     headers: headers,
   })
-    .then(res => {
+    .then((res) => {
       var blob = res.json();
       return blob;
     })
-    .then(data => {
+    .then((data) => {
       return data;
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('[ updateUser ]', error);
     });
   return response;
@@ -70,9 +72,9 @@ export const updateUser = async (user: User): Promise<any> => {
 
 export const deleteUser = async (user: User): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
-  const url = 'http://192.168.1.152:3500/users/';
+  const url = `${URL_BASE}users/`;
   const headers = {
-    Accept: 'application/json',
+    'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
   const body = JSON.stringify({
@@ -85,22 +87,86 @@ export const deleteUser = async (user: User): Promise<any> => {
     body: body,
     headers: headers,
   })
-    .then(res => {
+    .then((res) => {
       var blob = res.json();
       return blob;
     })
-    .then(data => {
+    .then((data) => {
       return data;
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('[ deleteUser ]', error);
+    });
+  return response;
+};
+
+// finish this if needed
+export const refreshWebrtcToken = async (user: User): Promise<any> => {
+  // IP addresses white list in android/app/src/main/res/network_security_config
+  const url = `${URL_BASE}users/get_token/`;
+  const headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+  const body = JSON.stringify({
+    username: user.username,
+  });
+
+  const response = fetch(url, {
+    method: 'POST',
+    body: body,
+    headers: headers,
+  })
+    .then((res) => {
+      var blob = res.json();
+      return blob;
+    })
+    .then((data) => {
+      return data;
+    })
+    .catch((error) => {
+      console.error('[ refreshWebrtcToken ]', error);
+    });
+  return response;
+};
+
+export const sendNotification = async (
+  notification: Notification
+): Promise<any> => {
+  // IP addresses white list in android/app/src/main/res/network_security_config
+  const url = `${URL_BASE}notifications/`;
+  const headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+  const body = JSON.stringify({
+    uuid: notification.uuid,
+    caller: notification.caller,
+    callee: notification.callee,
+  });
+
+  const response = fetch(url, {
+    method: 'POST',
+    body: body,
+    headers: headers,
+  })
+    .then((res) => {
+      var blob = res.json();
+      return blob;
+    })
+    .then((data) => {
+      console.log('[ sendNotification ]', data);
+      return data;
+    })
+    .catch((error) => {
+      console.error('[ sendNotification ]', error);
     });
   return response;
 };
 
 export const storeRegisteredUser = async (
   itemName: string,
-  jsonData: object,
+  jsonData: object
 ) => {
   try {
     await EncryptedStorage.setItem(itemName, JSON.stringify(jsonData));

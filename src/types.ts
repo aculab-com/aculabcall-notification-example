@@ -34,3 +34,9 @@ export interface User {
   platform?: string;
   webrtcToken: string;
 }
+
+export interface Notification {
+  uuid: string;
+  caller: string;
+  callee: string;
+}
