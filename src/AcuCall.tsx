@@ -23,10 +23,17 @@ import { RoundButton } from './components/RoundButton';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
 import VoipPushNotification from 'react-native-voip-push-notification';
+import messaging from '@react-native-firebase/messaging';
 import { AuthContext } from './App';
-import { deleteUser, sendNotification, updateUser } from './middleware';
+import {
+  deleteUser,
+  sendCallNotification,
+  sendNotification,
+  updateUser,
+} from './middleware';
 
 import RNCallKeep from 'react-native-callkeep';
+import { Notification } from './types';
 
 const MainCallButtons = (props: any) => {
   return (
@@ -214,12 +221,12 @@ const CallOutComponent = (props: any) => {
         <MenuButton
           title={'Call Client'}
           onPress={() => {
-            if (Platform.OS !== 'ios') {
-              // if (props.aculabCall.state.callUuid === '') {
-              props.aculabCall.getCallUuid(() => notificationHandler(props));
-              // } else {
-              //   notificationHandler(props);
-              // }
+            if (Platform.OS === 'ios' || Platform.OS === 'android') {
+              if (props.aculabCall.state.callUuid === '') {
+                props.aculabCall.getCallUuid(() => notificationHandler(props));
+              } else {
+                notificationHandler(props);
+              }
             } else {
               props.aculabCall.getCallUuid(() =>
                 props.aculabCall.startCall(
@@ -228,6 +235,17 @@ const CallOutComponent = (props: any) => {
                 )
               );
             }
+          }}
+        />
+        <MenuButton
+          title={'test'}
+          onPress={() => {
+            sendNotification({
+              uuid: 'a1f6e2b5-41b8-4261-a938-94f81327675f',
+              caller: props.aculabCall.state.callClientId,
+              callee: props.aculabCall.props.registerClientId,
+              webrtc_ready: true,
+            });
           }}
         />
       </View>
@@ -333,10 +351,7 @@ const DisplayClientCall = (props: any) => {
 const CallDisplayHandler = (props: any) => {
   if (
     props.aculabCall.state.callState === 'incoming call' ||
-    (props.aculabCall.state.incomingUI &&
-      props.aculabCall.state.callUIInteraction === 'answered') ||
-    (props.aculabCall.state.incomingUI &&
-      props.aculabCall.state.callUIInteraction === 'none')
+    props.aculabCall.state.incomingUI === true
   ) {
     return (
       <View style={styles.incomingContainer}>
@@ -419,41 +434,73 @@ const clearStorage = async () => {
 };
 
 const notificationHandler = async (props: any) => {
+  console.log('notificationHandler running now');
   let response;
-  response = await sendNotification({
+  response = await sendCallNotification({
     uuid: props.aculabCall.state.callUuid,
     caller: props.aculabCall.props.registerClientId,
     callee: props.aculabCall.state.callClientId,
   });
 
-  try {
-    if (response.message === 'success') {
-      // this delay is needed so the app has time to initialize on the callee side
-      // after receiving notification (iOS)
-      setTimeout(() => {
-        props.aculabCall.startCall(
-          'client',
-          props.aculabCall.state.callClientId
-        );
-      }, 7000);
-    } else if (response.message === 'calling_web_interface') {
-      props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
-    } else {
-      // console.log('resp', response);
-      showAlert('', response.message);
-    }
-  } catch (err) {
-    console.error('[ notificationHandler ]', err);
+  console.log('notificationHandler response:', response);
+  // try {
+  //   if (response.message === 'success') {
+  //     // this delay is needed so the app has time to initialize on the callee side
+  //     // after receiving notification (iOS)
+  //     setTimeout(() => {
+  //       props.aculabCall.startCall(
+  //         'client',
+  //         props.aculabCall.state.callClientId
+  //       );
+  //     }, 7000);
+  //   } else if (response.message === 'calling_web_interface') {
+  //     props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
+  //   } else {
+  //     // console.log('resp', response);
+  //     showAlert('', response.message);
+  //   }
+  // } catch (err) {
+  //   console.error('[ notificationHandler ]', err);
+  // }
+};
+
+// firebase iOS permission
+const requestUserPermission = async () => {
+  const authStatus = await messaging().requestPermission();
+  const enabled =
+    authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+    authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+  if (enabled) {
+    console.log('Authorization status:', authStatus);
   }
 };
 
 class AcuCall extends AculabCall {
+  private androidNotificationListener: any;
+  private answeredCall!: Notification;
+
   componentDidMount() {
     this.register();
     this.initializeCallKeep('AculabCall Example');
+    // requestUserPermission();
     if (Platform.OS === 'ios') {
       this.initializeVoipNotifications();
     }
+    if (Platform.OS === 'android') {
+      this.getAndroidDeviceToken();
+    }
+    this.androidNotificationListener = messaging().onMessage(
+      async (remoteMessage) => {
+        console.log('A new FCM message arrived! foreground', remoteMessage);
+        if (
+          remoteMessage.data!.webrtc_ready === 'true' &&
+          this.state.callClientId === remoteMessage.data!.body
+        ) {
+          this.startCall('client', this.state.callClientId);
+        }
+      }
+    );
   }
 
   componentWillUnmount() {
@@ -462,6 +509,8 @@ class AcuCall extends AculabCall {
     if (Platform.OS === 'ios') {
       this.unregisterVoipNotifications();
     }
+    this.androidNotificationListener(); // this removes androidNotificationListener
+    this.androidNotificationListener = null;
   }
 
   componentDidUpdate() {
@@ -477,11 +526,75 @@ class AcuCall extends AculabCall {
     ) {
       this.endCall();
     }
+    if (
+      this.state.callUIInteraction === 'answered' &&
+      this.state.incomingUI &&
+      this.answeredCall
+    ) {
+      console.log('answered call notification fired up from component update');
+      setTimeout(() => {
+        sendNotification(this.answeredCall);
+      }, 6000);
+    }
+    // if (
+    //   this.state.callUIInteraction === 'answered' &&
+    //   this.state.client &&
+    //   this.state.notificationCall
+    // ) {
+    //   console.log(
+    //     'foreground callforeground callforeground callforeground call'
+    //   );
+    //   sendNotification({
+    //     uuid: this.state.callUuid as string,
+    //     caller: 'martin',
+    //     callee: this.props.registerClientId,
+    //     webrtc_ready: true,
+    //   });
+    // }
   }
 
   unregister() {
     super.unregister();
     clearStorage();
+  }
+
+  getAndroidDeviceToken() {
+    // Get the device token
+    if (Platform.OS === 'android') {
+      messaging()
+        .getToken()
+        .then((token) => {
+          console.log(token);
+          // sent the token to the server
+          setTimeout(() => {
+            updateUser({
+              username: this.props.registerClientId,
+              platform: Platform.OS,
+              webrtcToken: this.props.webRTCToken,
+              deviceToken: token,
+            });
+          }, 3000);
+        });
+    }
+
+    // If using other push notification providers (ie Amazon SNS, etc)
+    // you may need to get the APNs token instead for iOS:
+    // if (Platform.OS === 'ios') {
+    //   messaging()
+    //     .getAPNSToken()
+    //     .then((token) => {
+    //       console.log(token);
+    //       // sent the token to the server
+    //       setTimeout(() => {
+    //         updateUser({
+    //           username: this.props.registerClientId,
+    //           platform: Platform.OS,
+    //           webrtcToken: this.props.webRTCToken,
+    //           deviceToken: token as string,
+    //         });
+    //       }, 3000);
+    //     });
+    // }
   }
 
   /**
@@ -491,8 +604,11 @@ class AcuCall extends AculabCall {
     setTimeout(() => {
       if (this.state.callState === 'idle' && this.state.callKeepCallActive) {
         RNCallKeep.endCall(this.state.callUuid as string);
+        this.setState({ callKeepCallActive: false });
+        this.setState({ notificationCall: false });
+        this.setState({ incomingUI: false });
       }
-    }, 10000);
+    }, 15000);
   }
 
   /**
@@ -551,6 +667,12 @@ class AcuCall extends AculabCall {
       // --- when receive remote voip push, register your VoIP client, show local notification ... etc
       this.setStatesNotificationCall(notification.uuid);
       console.log('[ Push Notifications ]', 'Notification:', notification);
+      sendNotification({
+        uuid: notification.uuid,
+        caller: notification.callerName,
+        callee: this.props.registerClientId,
+        webrtc_ready: true,
+      });
       // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
       VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
     });
@@ -572,19 +694,21 @@ class AcuCall extends AculabCall {
           (VoipPushNotification as any) // ignore missing type in the package
             .RNVoipPushRemoteNotificationsRegisteredEvent
         ) {
-          // this.onVoipPushNotificationRegistered(data);
-          // console.log('[ Push Notifications ]', 'Event Registered Data:', data);
         } else if (
           name ===
           (VoipPushNotification as any) // ignore missing type in the package
             .RNVoipPushRemoteNotificationReceivedEvent
         ) {
+          console.log('[ Push Notifications ]', 'Event Received data', data);
           if (data.uuid) {
             this.setStatesNotificationCall(data.uuid);
+            this.answeredCall = {
+              uuid: data.uuid,
+              caller: data.callerName,
+              callee: this.props.registerClientId,
+              webrtc_ready: true,
+            };
           }
-          // this.onVoipPushNotificationReceived(data);
-          // console.log('[ Push Notifications ]', 'Event Received data', data);
-          // this.setState({callUuid: data.uuid});
         }
       }
     });

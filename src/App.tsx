@@ -20,7 +20,8 @@ export const AuthContext = createContext<AuthContextTypes>(
   {} as AuthContextTypes
 );
 
-const App = () => {
+const App = (props: any) => {
+  console.log('App props', props);
   const [state, dispatch] = React.useReducer(
     (prevState: any, action: any) => {
       switch (action.type) {

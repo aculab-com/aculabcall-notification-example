@@ -64,6 +64,10 @@ example
 adb -s ZY2243N2N6 reverse tcp:3500 tcp:3500
 ```
 
+android firebase messaging
+
+register you app on firebase console <https://console.firebase.google.com>
+
 ### iOS
 
 if iOS throws [TypeError: Network request failed] when registering user (fetch function)

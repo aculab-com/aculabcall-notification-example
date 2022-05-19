@@ -130,6 +130,40 @@ export const refreshWebrtcToken = async (user: User): Promise<any> => {
   return response;
 };
 
+export const sendCallNotification = async (
+  notification: Notification
+): Promise<any> => {
+  // IP addresses white list in android/app/src/main/res/network_security_config
+  const url = `${URL_BASE}notifications/call`;
+  const headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+  const body = JSON.stringify({
+    uuid: notification.uuid,
+    caller: notification.caller,
+    callee: notification.callee,
+  });
+
+  const response = fetch(url, {
+    method: 'POST',
+    body: body,
+    headers: headers,
+  })
+    .then((res) => {
+      var blob = res.json();
+      return blob;
+    })
+    .then((data) => {
+      console.log('[ sendCallNotification ]', data);
+      return data;
+    })
+    .catch((error) => {
+      console.error('[ sendCallNotification ]', error);
+    });
+  return response;
+};
+
 export const sendNotification = async (
   notification: Notification
 ): Promise<any> => {
@@ -143,6 +177,7 @@ export const sendNotification = async (
     uuid: notification.uuid,
     caller: notification.caller,
     callee: notification.callee,
+    webrtc_ready: notification.webrtc_ready,
   });
 
   const response = fetch(url, {

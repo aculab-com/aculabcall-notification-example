@@ -62,5 +62,8 @@ buck-out/
 
 # Development only
 devConstants.ts
-
 react-native-aculab-client-1.0.3.tgz
+
+# Firebase
+google-services.json
+/ios/GoogleService-Info.plist

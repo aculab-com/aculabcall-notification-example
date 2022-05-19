@@ -3,6 +3,7 @@
 #import "RNVoipPushNotificationManager.h"
 
 #import <PushKit/PushKit.h>
+#import <Firebase.h>
 
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
@@ -32,27 +33,27 @@
 /**
  Deletes all Keychain items accessible by this app if this is the first time the user launches the app
  */
-static void ClearKeychainIfNecessary() {
-    // Checks wether or not this is the first time the app is run
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"HAS_RUN_BEFORE"] == NO) {
-        // Set the appropriate value so we don't clear next time the app is launched
-        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"HAS_RUN_BEFORE"];
-
-        NSArray *secItemClasses = @[
-            (__bridge id)kSecClassGenericPassword,
-            (__bridge id)kSecClassInternetPassword,
-            (__bridge id)kSecClassCertificate,
-            (__bridge id)kSecClassKey,
-            (__bridge id)kSecClassIdentity
-        ];
-
-        // Maps through all Keychain classes and deletes all items that match
-        for (id secItemClass in secItemClasses) {
-            NSDictionary *spec = @{(__bridge id)kSecClass: secItemClass};
-            SecItemDelete((__bridge CFDictionaryRef)spec);
-        }
-    }
-}
+//static void ClearKeychainIfNecessary() {
+//    // Checks wether or not this is the first time the app is run
+//    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"HAS_RUN_BEFORE"] == NO) {
+//        // Set the appropriate value so we don't clear next time the app is launched
+//        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"HAS_RUN_BEFORE"];
+//
+//        NSArray *secItemClasses = @[
+//            (__bridge id)kSecClassGenericPassword,
+//            (__bridge id)kSecClassInternetPassword,
+//            (__bridge id)kSecClassCertificate,
+//            (__bridge id)kSecClassKey,
+//            (__bridge id)kSecClassIdentity
+//        ];
+//
+//        // Maps through all Keychain classes and deletes all items that match
+//        for (id secItemClass in secItemClasses) {
+//            NSDictionary *spec = @{(__bridge id)kSecClass: secItemClass};
+//            SecItemDelete((__bridge CFDictionaryRef)spec);
+//        }
+//    }
+//}
 
 @implementation AppDelegate
 
@@ -60,9 +61,18 @@ static void ClearKeychainIfNecessary() {
 {
   RCTAppSetupPrepareApp(application);
 
-  ClearKeychainIfNecessary(); // clear the Keychain when the app is firt launched
+//  ClearKeychainIfNecessary(); // clear the Keychain when the app is first launched (secure storege)
+  
+  [FIRApp configure]; // configure firebase
 
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  
+  [RNCallKeep setup:@{
+      @"appName": @"AculabCallNotificationsExample",
+      @"maximumCallGroups": @3,
+      @"maximumCallsPerCallGroup": @1,
+      @"supportsVideo": @YES,
+    }];
   
   // ===== (THIS IS OPTIONAL BUT RECOMMENDED) ===== react-native-voip-push-notification
   // --- register VoipPushNotification here ASAP rather than in JS. Doing this from the JS side may be too slow for some use cases
@@ -197,6 +207,7 @@ static void ClearKeychainIfNecessary() {
                             payload: extra
               withCompletionHandler: completion];
   
+  [NSThread sleepForTimeInterval: 5];
   // --- You don't need to call it if you stored `completion()` and will call it on the js side.
   completion();
 }

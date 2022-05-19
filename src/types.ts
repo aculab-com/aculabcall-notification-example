@@ -39,4 +39,5 @@ export interface Notification {
   uuid: string;
   caller: string;
   callee: string;
+  webrtc_ready?: boolean;
 }
