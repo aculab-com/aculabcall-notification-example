@@ -14,7 +14,6 @@ import {
   AculabCall,
   turnOnSpeaker,
   deleteSpaces,
-  showAlert,
 } from 'react-native-aculab-client';
 import { MenuButton } from './components/MenuButton';
 import { KeypadButton } from './components/KeypadButton';
@@ -443,6 +442,10 @@ const notificationHandler = async (props: any) => {
   });
 
   console.log('notificationHandler response:', response);
+
+  if (response.message === 'calling_web_interface') {
+    props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
+  }
   // try {
   //   if (response.message === 'success') {
   //     // this delay is needed so the app has time to initialize on the callee side
@@ -542,7 +545,7 @@ class AcuCall extends AculabCall {
     //   this.state.notificationCall
     // ) {
     //   console.log(
-    //     'foreground callforeground callforeground callforeground call'
+    //     'foreground call foreground call foreground call foreground call'
     //   );
     //   sendNotification({
     //     uuid: this.state.callUuid as string,
