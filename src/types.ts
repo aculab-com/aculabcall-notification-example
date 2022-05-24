@@ -30,7 +30,8 @@ export type AuthContextTypes = {
 export interface User {
   id?: number;
   username: string;
-  deviceToken?: string;
+  fcmDeviceToken?: string;
+  iosDeviceToken?: string;
   platform?: string;
   webrtcToken: string;
 }

@@ -236,7 +236,7 @@ const CallOutComponent = (props: any) => {
             }
           }}
         />
-        <MenuButton
+        {/* <MenuButton
           title={'test'}
           onPress={() => {
             sendNotification({
@@ -246,7 +246,7 @@ const CallOutComponent = (props: any) => {
               webrtc_ready: true,
             });
           }}
-        />
+        /> */}
       </View>
     </View>
   );
@@ -433,7 +433,7 @@ const clearStorage = async () => {
 };
 
 const notificationHandler = async (props: any) => {
-  console.log('notificationHandler running now');
+  // console.log('notificationHandler running now');
   let response;
   response = await sendCallNotification({
     uuid: props.aculabCall.state.callUuid,
@@ -441,7 +441,7 @@ const notificationHandler = async (props: any) => {
     callee: props.aculabCall.state.callClientId,
   });
 
-  console.log('notificationHandler response:', response);
+  // console.log('notificationHandler response:', response);
 
   if (response.message === 'calling_web_interface') {
     props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
@@ -481,27 +481,49 @@ const requestUserPermission = async () => {
 
 class AcuCall extends AculabCall {
   private androidNotificationListener: any;
-  private answeredCall!: Notification;
+  private answeredCall!: Notification | null;
+  private iosDeviceToken!: string;
 
   componentDidMount() {
     this.register();
     this.initializeCallKeep('AculabCall Example');
-    // requestUserPermission();
+    requestUserPermission();
     if (Platform.OS === 'ios') {
       this.initializeVoipNotifications();
     }
-    if (Platform.OS === 'android') {
-      this.getAndroidDeviceToken();
-    }
+    this.getFcmDeviceToken();
     this.androidNotificationListener = messaging().onMessage(
       async (remoteMessage) => {
-        console.log('A new FCM message arrived! foreground', remoteMessage);
+        console.log('A new FCM message arrived! foreground, platform', Platform.OS);
+        console.log('A new FCM message arrived! foreground, message', remoteMessage);
         if (
           remoteMessage.data!.webrtc_ready === 'true' &&
-          this.state.callClientId === remoteMessage.data!.body
+          this.state.callClientId === remoteMessage.data!.body &&
+          this.state.callState === 'idle'
         ) {
           this.startCall('client', this.state.callClientId);
+        } else if (
+          Platform.OS === 'android' &&
+          remoteMessage.data!.title === 'Incoming Call' &&
+          this.state.callState === 'idle'
+        ) {
+          RNCallKeep.displayIncomingCall(
+            remoteMessage.data!.uuid,
+            remoteMessage.data!.body,
+            remoteMessage.data!.body
+          );
+          this.answeredCall = {
+            uuid: remoteMessage.data!.uuid,
+            caller: remoteMessage.data!.body,
+            callee: this.props.registerClientId,
+            webrtc_ready: true,
+          };
+          sendNotification(this.answeredCall);
+          this.setStatesNotificationCall(remoteMessage.data!.uuid);
         }
+        // } else if (Platform.OS === 'ios') {
+        //   console.log('notification arrived to ios device');
+        // }
       }
     );
   }
@@ -536,7 +558,8 @@ class AcuCall extends AculabCall {
     ) {
       console.log('answered call notification fired up from component update');
       setTimeout(() => {
-        sendNotification(this.answeredCall);
+        sendNotification(this.answeredCall!);
+        this.answeredCall = null;
       }, 6000);
     }
     // if (
@@ -561,7 +584,7 @@ class AcuCall extends AculabCall {
     clearStorage();
   }
 
-  getAndroidDeviceToken() {
+  getFcmDeviceToken() {
     // Get the device token
     if (Platform.OS === 'android') {
       messaging()
@@ -574,30 +597,27 @@ class AcuCall extends AculabCall {
               username: this.props.registerClientId,
               platform: Platform.OS,
               webrtcToken: this.props.webRTCToken,
-              deviceToken: token,
+              fcmDeviceToken: token,
+            });
+          }, 3000);
+        });
+    } else if (Platform.OS === 'ios') {
+      messaging()
+        .getToken()
+        .then((token) => {
+          console.log(token);
+          // sent the token to the server
+          setTimeout(() => {
+            updateUser({
+              username: this.props.registerClientId,
+              platform: Platform.OS,
+              webrtcToken: this.props.webRTCToken,
+              fcmDeviceToken: token,
+              iosDeviceToken: this.iosDeviceToken,
             });
           }, 3000);
         });
     }
-
-    // If using other push notification providers (ie Amazon SNS, etc)
-    // you may need to get the APNs token instead for iOS:
-    // if (Platform.OS === 'ios') {
-    //   messaging()
-    //     .getAPNSToken()
-    //     .then((token) => {
-    //       console.log(token);
-    //       // sent the token to the server
-    //       setTimeout(() => {
-    //         updateUser({
-    //           username: this.props.registerClientId,
-    //           platform: Platform.OS,
-    //           webrtcToken: this.props.webRTCToken,
-    //           deviceToken: token as string,
-    //         });
-    //       }, 3000);
-    //     });
-    // }
   }
 
   /**
@@ -653,14 +673,15 @@ class AcuCall extends AculabCall {
       // --- send token to your apn provider server
       // The timeout is not needed is server is using database but with writing into files the server resets itself.
       // Therefore, this delay makes time for server to reset after registering user request.
-      setTimeout(() => {
-        updateUser({
-          username: this.props.registerClientId,
-          platform: Platform.OS,
-          webrtcToken: this.props.webRTCToken,
-          deviceToken: token,
-        });
-      }, 3000);
+      this.iosDeviceToken = token;
+      // setTimeout(() => {
+      //   updateUser({
+      //     username: this.props.registerClientId,
+      //     platform: Platform.OS,
+      //     webrtcToken: this.props.webRTCToken,
+      //     deviceToken: token,
+      //   });
+      // }, 3000);
       // console.log('[ Push Notifications ]', 'Token:', token);
     });
 
@@ -669,7 +690,7 @@ class AcuCall extends AculabCall {
     VoipPushNotification.addEventListener('notification', (notification) => {
       // --- when receive remote voip push, register your VoIP client, show local notification ... etc
       this.setStatesNotificationCall(notification.uuid);
-      console.log('[ Push Notifications ]', 'Notification:', notification);
+      // console.log('[ Push Notifications ]', 'Notification:', notification);
       sendNotification({
         uuid: notification.uuid,
         caller: notification.callerName,
@@ -702,7 +723,7 @@ class AcuCall extends AculabCall {
           (VoipPushNotification as any) // ignore missing type in the package
             .RNVoipPushRemoteNotificationReceivedEvent
         ) {
-          console.log('[ Push Notifications ]', 'Event Received data', data);
+          // console.log('[ Push Notifications ]', 'Event Received data', data);
           if (data.uuid) {
             this.setStatesNotificationCall(data.uuid);
             this.answeredCall = {

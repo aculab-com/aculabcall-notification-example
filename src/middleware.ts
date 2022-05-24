@@ -15,7 +15,7 @@ export const registerUser = async (username: string): Promise<any> => {
   };
   const body = JSON.stringify({
     username: username,
-    deviceToken: '',
+    fcmDeviceToken: '',
     platform: platform,
   });
 
@@ -47,7 +47,8 @@ export const updateUser = async (user: User): Promise<any> => {
   const body = JSON.stringify({
     id: user.id,
     username: user.username,
-    deviceToken: user.deviceToken,
+    fcmDeviceToken: user.fcmDeviceToken,
+    iosDeviceToken: user.iosDeviceToken,
     webrtcToken: user.webrtcToken,
     platform: platform,
   });
@@ -155,7 +156,7 @@ export const sendCallNotification = async (
       return blob;
     })
     .then((data) => {
-      console.log('[ sendCallNotification ]', data);
+      // console.log('[ sendCallNotification ]', data);
       return data;
     })
     .catch((error) => {
@@ -190,7 +191,7 @@ export const sendNotification = async (
       return blob;
     })
     .then((data) => {
-      console.log('[ sendNotification ]', data);
+      // console.log('[ sendNotification ]', data);
       return data;
     })
     .catch((error) => {

@@ -12,8 +12,6 @@ import { aculabClientEvent } from 'react-native-aculab-client/src/AculabClientMo
 
 let userAction = 'none';
 
-// RNCallKeep.addEventListener('answerCall', () => console.log('11111111111111'));
-
 // Register background handler
 messaging().setBackgroundMessageHandler(async (remoteNotification) => {
   console.log('background notification arrived', remoteNotification.data);
@@ -29,9 +27,10 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
     const androidListenerA = aculabClientEvent.addListener(
       'rejectedCallAndroid',
       (_payload) => {
-        console.log('[ AculabCall ]', 'endCallAndroid', _payload);
+        console.log('[ index listener ]', 'endCallAndroid', _payload);
         // this.endCall();
         androidListenerA.remove();
+        androidListenerB.remove();
       }
     );
     // @ts-ignore: aculabClientEvent is not undefined for android
@@ -42,6 +41,7 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
         // this.answerCall();
         userAction = 'answered';
         Linking.openURL('app://testApp');
+        androidListenerA.remove();
         androidListenerB.remove();
       }
     );
