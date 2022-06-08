@@ -698,14 +698,12 @@ class AcuCall extends AculabCall {
     VoipPushNotification.addEventListener('notification', (notification) => {
       // --- when receive remote voip push, register your VoIP client, show local notification ... etc
       this.setStatesNotificationCall(notification.uuid);
-      // console.log('[ Push Notifications ]', 'Notification:', notification);
-
-      sendNotification({
+      this.answeredCall = {
         uuid: notification.uuid,
         caller: notification.callerName,
         callee: this.props.registerClientId,
         webrtc_ready: true,
-      });
+      };
 
       // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
       VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
