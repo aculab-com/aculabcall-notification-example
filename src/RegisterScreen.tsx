@@ -6,12 +6,12 @@ import { MenuButton } from './components/MenuButton';
 import { deleteSpaces } from 'react-native-aculab-client';
 import { AuthContext } from './App';
 
-import { DEV_CONSTANTS } from '../devConstants';
-
+/**
+ * Registration screen
+ * @returns view
+ */
 export const RegisterScreen = () => {
-  const [registerClientId, setRegisterClientId] = useState(
-    DEV_CONSTANTS.registerClientId
-  );
+  const [registerClientId, setRegisterClientId] = useState('');
 
   const { signUp } = useContext(AuthContext);
 

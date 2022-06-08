@@ -4,8 +4,14 @@ import type { Notification, User } from './types';
 
 const platform = Platform.OS;
 
+// Notification server base url
 const URL_BASE = 'http://192.168.1.152:3500/';
 
+/**
+ * create new user on the server
+ * @param {string} username new user username
+ * @returns server response
+ */
 export const registerUser = async (username: string): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/`;
@@ -36,6 +42,12 @@ export const registerUser = async (username: string): Promise<any> => {
   return response;
 };
 
+/**
+ * Update user on the server\
+ * use to update fcmDeviceToken and iosDeviceToken
+ * @param {User} user user object to be updated
+ * @returns server response
+ */
 export const updateUser = async (user: User): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/`;
@@ -69,6 +81,11 @@ export const updateUser = async (user: User): Promise<any> => {
   return response;
 };
 
+/**
+ * Delete user from the server
+ * @param {string} username user to be deleted
+ * @returns server response
+ */
 export const deleteUser = async (username: string): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/`;
@@ -98,6 +115,11 @@ export const deleteUser = async (username: string): Promise<any> => {
   return response;
 };
 
+/**
+ * Refresh WebRTC Token
+ * @param {User} user user that will get Token refreshed
+ * @returns server response
+ */
 export const refreshWebrtcToken = async (user: User): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/get_token/`;
@@ -128,6 +150,11 @@ export const refreshWebrtcToken = async (user: User): Promise<any> => {
   return response;
 };
 
+/**
+ * Send incoming call notification
+ * @param {Notification} notification notification object with data
+ * @returns server response
+ */
 export const sendCallNotification = async (
   notification: Notification
 ): Promise<any> => {
@@ -161,6 +188,11 @@ export const sendCallNotification = async (
   return response;
 };
 
+/**
+ * Send silent notification
+ * @param {Notification} notification notification object with data
+ * @returns server response
+ */
 export const sendNotification = async (
   notification: Notification
 ): Promise<any> => {
@@ -195,6 +227,11 @@ export const sendNotification = async (
   return response;
 };
 
+/**
+ * Store item in local storage
+ * @param {string} itemName item key value
+ * @param {object} jsonData data to be stored and linked to key value
+ */
 export const storeRegisteredUser = async (
   itemName: string,
   jsonData: object
@@ -208,6 +245,9 @@ export const storeRegisteredUser = async (
   }
 };
 
+/**
+ * clear everything from local storage
+ */
 export const clearStorage = async () => {
   try {
     await EncryptedStorage.clear();

@@ -34,6 +34,11 @@ import RNCallKeep from 'react-native-callkeep';
 import { AndroidFromKilledCall, Notification } from './types';
 import { notificationHandler } from './handlers';
 
+/**
+ * Main call buttons component
+ * @param props AculabCall instance
+ * @returns main call buttons wrapped in view
+ */
 const MainCallButtons = (props: any) => {
   return (
     <View style={styles.callButtonsContainer}>
@@ -56,6 +61,11 @@ const MainCallButtons = (props: any) => {
   );
 };
 
+/**
+ * Dialing keypad component
+ * @param props AculabCall instance
+ * @returns dialing keypad wrapped in view
+ */
 const DialKeypad = (props: any) => {
   return (
     <View style={styles.dialKeypad}>
@@ -135,6 +145,11 @@ const DialKeypad = (props: any) => {
   );
 };
 
+/**
+ * Client call buttons component
+ * @param props AculabCall instance
+ * @returns client call buttons wrapped in view
+ */
 const ClientCallButtons = (props: any) => {
   var videoIcon: string = '';
   var audioIcon: string = '';
@@ -175,6 +190,11 @@ const ClientCallButtons = (props: any) => {
   );
 };
 
+/**
+ * Call out component
+ * @param props AculabCall instance
+ * @returns Call out view
+ */
 const CallOutComponent = (props: any) => {
   return (
     <View style={styles.inputContainer}>
@@ -241,6 +261,11 @@ const CallOutComponent = (props: any) => {
   );
 };
 
+/**
+ * Display client call component
+ * @param props AculabCall instance
+ * @returns client call display wrapped in view
+ */
 const DisplayClientCall = (props: any) => {
   if (!props.aculabCall.state.remoteStream) {
     if (
@@ -336,6 +361,11 @@ const DisplayClientCall = (props: any) => {
   }
 };
 
+/**
+ * handles call screen displaying - component
+ * @param props AculabCall instance
+ * @returns view
+ */
 const CallDisplayHandler = (props: any) => {
   if (
     props.aculabCall.state.callState === 'incoming call' ||
@@ -366,6 +396,11 @@ const CallDisplayHandler = (props: any) => {
   }
 };
 
+/**
+ * Handles call buttons being displayed component
+ * @param props AculabCall instance
+ * @returns view
+ */
 const CallButtonsHandler = (props: any) => {
   if (props.aculabCall.state.callState === 'incoming call') {
     return <View />;
@@ -392,6 +427,11 @@ const CallButtonsHandler = (props: any) => {
   }
 };
 
+/**
+ * Log out and, delete user from server and local storage
+ * @param props AculabCall instance
+ * @returns view
+ */
 const LogOutButton = (props: any) => {
   const { signOut } = useContext(AuthContext);
   return (
@@ -409,7 +449,9 @@ const LogOutButton = (props: any) => {
   );
 };
 
-// firebase iOS permission
+/**
+ * request iOS permission for firebase notifications
+ */
 const requestUserPermission = async () => {
   const authStatus = await messaging().requestPermission();
   const enabled =
@@ -520,6 +562,10 @@ class AcuCall extends AculabCall {
     }
   }
 
+  /**
+   * Overwritten function - added set-up for notifications
+   * @param payload object {uuid: string, caller: string}
+   */
   answeredCallAndroid(payload: any) {
     this.answeredCall = {
       uuid: payload.uuid,
@@ -531,6 +577,13 @@ class AcuCall extends AculabCall {
     this.setState({ incomingUI: true });
   }
 
+  /**
+   * Overwritten - displays Android custom incoming UI
+   * this function prevents the UI to be called twice when accepting call from killed state
+   * @param {string} handle call handle
+   * @param {string} callUUID call uuid
+   * @param {string} name caller's name
+   */
   displayCustomIncomingUI(
     handle?: string,
     callUUID?: string,
@@ -542,11 +595,17 @@ class AcuCall extends AculabCall {
     this.call = undefined;
   }
 
+  /**
+   * Unregister - set default state to client and webRTCToken and clears local storage
+   */
   unregister() {
     super.unregister();
     clearStorage();
   }
 
+  /**
+   * get the FCM token and store the token in the server
+   */
   getFcmDeviceToken() {
     // Get the device token
     if (Platform.OS === 'android') {
@@ -595,7 +654,7 @@ class AcuCall extends AculabCall {
 
   /**
    * Set AculabCall states for VoIP Notification
-   * @param <string> uuid for the call
+   * @param {string} uuid for the call
    */
   setStatesNotificationCall(uuid: string) {
     this.setState({ callUuid: uuid });
@@ -695,6 +754,10 @@ class AcuCall extends AculabCall {
     console.log('[ AcuCall ]', 'VoiP Push Notifications Initialized:');
   }
 
+  /**
+   * Head component
+   * @returns view
+   */
   CallHeadComponent = () => {
     return (
       <View style={styles.row}>

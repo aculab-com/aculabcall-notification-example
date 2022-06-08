@@ -55,7 +55,6 @@ const App = (callProps: any) => {
   useEffect(() => {
     // Fetch the token from storage then navigate to our appropriate place
     const bootstrapAsync = async () => {
-      // let jsonUser;
       let refreshedUser;
 
       try {
@@ -63,14 +62,8 @@ const App = (callProps: any) => {
         let jsonUser = JSON.parse(localStoredUser as string);
         refreshedUser = await refreshWebrtcToken(jsonUser);
       } catch (err: any) {
-        // Restoring token failed
-        console.error('restoring token error:', err);
+        // Restoring user failed
       }
-
-      // After restoring token, we may need to validate it in production apps
-
-      // This will switch to the App screen or Auth screen and this loading
-      // screen will be unmounted and thrown away.
       dispatch({ type: 'RESTORE_TOKEN', user: refreshedUser });
     };
 
@@ -91,10 +84,6 @@ const App = (callProps: any) => {
           storeRegisteredUser('registered_user', regUser);
           dispatch({ type: 'SIGN_IN', user: regUser });
         }
-        // // In a production app, we need to send user data to server and get a token
-        // // We will also need to handle errors if sign up failed
-        // // After getting token, we need to persist the token using `SecureStore`
-        // // In the example, we'll use a dummy token
       },
     }),
     []
