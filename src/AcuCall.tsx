@@ -14,26 +14,25 @@ import {
   AculabCall,
   turnOnSpeaker,
   deleteSpaces,
-  showAlert,
 } from 'react-native-aculab-client';
 import { MenuButton } from './components/MenuButton';
 import { KeypadButton } from './components/KeypadButton';
 import { CallButton } from './components/CallButton';
 import { RoundButton } from './components/RoundButton';
-import EncryptedStorage from 'react-native-encrypted-storage';
 
 import VoipPushNotification from 'react-native-voip-push-notification';
 import messaging from '@react-native-firebase/messaging';
 import { AuthContext } from './App';
 import {
+  clearStorage,
   deleteUser,
-  sendCallNotification,
   sendNotification,
   updateUser,
 } from './middleware';
 
 import RNCallKeep from 'react-native-callkeep';
 import { AndroidFromKilledCall, Notification } from './types';
+import { notificationHandler } from './handlers';
 
 const MainCallButtons = (props: any) => {
   return (
@@ -237,17 +236,6 @@ const CallOutComponent = (props: any) => {
             }
           }}
         />
-        {/* <MenuButton
-          title={'test'}
-          onPress={() => {
-            sendNotification({
-              uuid: 'a1f6e2b5-41b8-4261-a938-94f81327675f',
-              caller: props.aculabCall.state.callClientId,
-              callee: props.aculabCall.props.registerClientId,
-              webrtc_ready: true,
-            });
-          }}
-        /> */}
       </View>
     </View>
   );
@@ -421,35 +409,6 @@ const LogOutButton = (props: any) => {
   );
 };
 
-const clearStorage = async () => {
-  try {
-    await EncryptedStorage.clear();
-    // Congrats! You've just cleared the device storage!
-  } catch (err) {
-    console.error('[ AcuCall ]', 'clearStorage error', err);
-  }
-};
-
-const notificationHandler = async (props: any) => {
-  // console.log('notificationHandler running now');
-  let response;
-  response = await sendCallNotification({
-    uuid: props.aculabCall.state.callUuid,
-    caller: props.aculabCall.props.registerClientId,
-    callee: props.aculabCall.state.callClientId,
-  });
-
-  console.log('notificationHandler response:', response);
-
-  if (response.error) {
-    showAlert('', response.error);
-  }
-
-  if (response.message === 'calling_web_interface') {
-    props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
-  }
-};
-
 // firebase iOS permission
 const requestUserPermission = async () => {
   const authStatus = await messaging().requestPermission();
@@ -461,8 +420,6 @@ const requestUserPermission = async () => {
     console.log('Authorization status:', authStatus);
   }
 };
-
-// import { AcuMobComProps, AcuMobCo } from 'react-native-aculab-client/lib/typescript/types';
 
 class AcuCall extends AculabCall {
   private fcmNotificationListener: any;
@@ -485,12 +442,9 @@ class AcuCall extends AculabCall {
         callee: this.props.registerClientId,
         webrtc_ready: true,
       };
-      // setTimeout(() => {
-      console.log('sending confirm notification ui interaction', this.state.callUIInteraction);
+      console.log('sent confirm notification', this.state.callUIInteraction);
       sendNotification(this.answeredCall!);
-      // this.call = undefined;
       this.answeredCall = null;
-      // }, 6000);
     }
     this.getFcmDeviceToken();
     this.fcmNotificationListener = messaging().onMessage(
@@ -528,9 +482,6 @@ class AcuCall extends AculabCall {
           sendNotification(this.answeredCall);
           this.setStatesNotificationCall(remoteMessage.data!.uuid);
         }
-        // } else if (Platform.OS === 'ios') {
-        //   console.log('notification arrived to ios device');
-        // }
       }
     );
   }
@@ -541,7 +492,7 @@ class AcuCall extends AculabCall {
     if (Platform.OS === 'ios') {
       this.unregisterVoipNotifications();
     }
-    this.fcmNotificationListener(); // this removes fcmNotificationListener
+    this.fcmNotificationListener(); // remove fcmNotificationListener
     this.fcmNotificationListener = null;
   }
 
@@ -550,14 +501,12 @@ class AcuCall extends AculabCall {
       this.state.callUIInteraction === 'answered' &&
       this.state.callState === 'incoming call'
     ) {
-      console.log('11111111111111111');
       this.answerCall();
     }
     if (
       this.state.callUIInteraction === 'rejected' &&
       this.state.callState === 'incoming call'
     ) {
-      console.log('22222222222222222');
       this.endCall();
     }
     if (
@@ -566,26 +515,9 @@ class AcuCall extends AculabCall {
       this.answeredCall
     ) {
       console.log('answered call notification fired up from component update');
-      // setTimeout(() => {
       sendNotification(this.answeredCall!);
       this.answeredCall = null;
-      // }, 6000);
     }
-    // if (
-    //   this.state.callUIInteraction === 'answered' &&
-    //   this.state.client &&
-    //   this.state.notificationCall
-    // ) {
-    //   console.log(
-    //     'foreground call foreground call foreground call foreground call'
-    //   );
-    //   sendNotification({
-    //     uuid: this.state.callUuid as string,
-    //     caller: 'martin',
-    //     callee: this.props.registerClientId,
-    //     webrtc_ready: true,
-    //   });
-    // }
   }
 
   answeredCallAndroid(payload: any) {
@@ -623,14 +555,12 @@ class AcuCall extends AculabCall {
         .then((token) => {
           console.log(token);
           // sent the token to the server
-          // setTimeout(() => {
           updateUser({
             username: this.props.registerClientId,
             platform: Platform.OS,
             webrtcToken: this.props.webRTCToken,
             fcmDeviceToken: token,
           });
-          // }, 3000);
         });
     } else if (Platform.OS === 'ios') {
       messaging()
@@ -638,7 +568,6 @@ class AcuCall extends AculabCall {
         .then((token) => {
           console.log(token);
           // sent the token to the server
-          // setTimeout(() => {
           updateUser({
             username: this.props.registerClientId,
             platform: Platform.OS,
@@ -646,7 +575,6 @@ class AcuCall extends AculabCall {
             fcmDeviceToken: token,
             iosDeviceToken: this.iosDeviceToken,
           });
-          // }, 3000);
         });
     }
   }
@@ -699,21 +627,11 @@ class AcuCall extends AculabCall {
     // --- it does NOT mean this will have events each time when the app reopened.
 
     // ===== Step 1: subscribe `register` event =====
-    // --- this.onVoipPushNotificationRegistered
     VoipPushNotification.addEventListener('register', (token) => {
       // --- send token to your apn provider server
       // The timeout is not needed is server is using database but with writing into files the server resets itself.
       // Therefore, this delay makes time for server to reset after registering user request.
       this.iosDeviceToken = token;
-      // setTimeout(() => {
-      //   updateUser({
-      //     username: this.props.registerClientId,
-      //     platform: Platform.OS,
-      //     webrtcToken: this.props.webRTCToken,
-      //     deviceToken: token,
-      //   });
-      // }, 3000);
-      // console.log('[ Push Notifications ]', 'Token:', token);
     });
 
     // ===== Step 2: subscribe `notification` event =====

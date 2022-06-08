@@ -31,7 +31,7 @@ export const registerUser = async (username: string): Promise<any> => {
       return data;
     })
     .catch((error) => {
-      console.error('[ registerUser ]', error);
+      console.error('[ registerUser ]', error.message);
     });
   return response;
 };
@@ -64,7 +64,7 @@ export const updateUser = async (user: User): Promise<any> => {
       return data;
     })
     .catch((error) => {
-      console.error('[ updateUser ]', error);
+      console.error('[ updateUser ]', error.message);
     });
   return response;
 };
@@ -93,12 +93,11 @@ export const deleteUser = async (username: string): Promise<any> => {
       return data;
     })
     .catch((error) => {
-      console.error('[ deleteUser ]', error);
+      console.error('[ deleteUser ]', error.message);
     });
   return response;
 };
 
-// finish this if needed
 export const refreshWebrtcToken = async (user: User): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/get_token/`;
@@ -124,7 +123,7 @@ export const refreshWebrtcToken = async (user: User): Promise<any> => {
       return data;
     })
     .catch((error) => {
-      console.error('[ refreshWebrtcToken ]', error);
+      console.error('[ refreshWebrtcToken ]', error.message);
     });
   return response;
 };
@@ -154,11 +153,10 @@ export const sendCallNotification = async (
       return blob;
     })
     .then((data) => {
-      // console.log('[ sendCallNotification ]', data);
       return data;
     })
     .catch((error) => {
-      console.error('[ sendCallNotification ]', error);
+      console.error('[ sendCallNotification ]', error.message);
     });
   return response;
 };
@@ -189,11 +187,10 @@ export const sendNotification = async (
       return blob;
     })
     .then((data) => {
-      // console.log('[ sendNotification ]', data);
       return data;
     })
     .catch((error) => {
-      console.error('[ sendNotification ]', error);
+      console.error('[ sendNotification ]', error.message);
     });
   return response;
 };
@@ -208,5 +205,14 @@ export const storeRegisteredUser = async (
     // Congrats! You've just stored your first value!
   } catch (error) {
     // There was an error on the native side
+  }
+};
+
+export const clearStorage = async () => {
+  try {
+    await EncryptedStorage.clear();
+    // Congrats! You've just cleared the device storage!
+  } catch (err) {
+    console.error('[ AcuCall ]', 'clearStorage error', err);
   }
 };

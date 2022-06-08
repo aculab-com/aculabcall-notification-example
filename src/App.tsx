@@ -59,12 +59,12 @@ const App = (callProps: any) => {
       let refreshedUser;
 
       try {
-        // userToken = await SecureStore.getItemAsync('userToken');
         let localStoredUser = await EncryptedStorage.getItem('registered_user');
         let jsonUser = JSON.parse(localStoredUser as string);
         refreshedUser = await refreshWebrtcToken(jsonUser);
-      } catch (e) {
+      } catch (err: any) {
         // Restoring token failed
+        console.error('restoring token error:', err);
       }
 
       // After restoring token, we may need to validate it in production apps
