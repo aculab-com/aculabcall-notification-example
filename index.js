@@ -8,9 +8,8 @@ import { name as appName } from './app.json';
 import messaging from '@react-native-firebase/messaging';
 import { incomingCallNotification } from 'react-native-aculab-client';
 import { aculabClientEvent } from 'react-native-aculab-client/src/AculabClientModule';
-// import RNCallKeep from 'react-native-callkeep';
 
-let userAction = 'none';
+let call;
 
 // Register background handler
 messaging().setBackgroundMessageHandler(async (remoteNotification) => {
@@ -18,6 +17,7 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
 
   if (Platform.OS === 'android') {
     incomingCallNotification(
+      remoteNotification.data.uuid,
       remoteNotification.data.channel_id,
       remoteNotification.data.title,
       'channel used to display incoming call notification',
@@ -39,7 +39,12 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
       (_payload) => {
         console.log('[ index listener ]', 'answerCallAndroid', _payload);
         // this.answerCall();
-        userAction = 'answered';
+        call = {
+          uuid: remoteNotification.data.uuid,
+          caller: remoteNotification.data.body,
+          callee: '',
+          answered: _payload.callAccepted,
+        };
         Linking.openURL('app://testApp');
         androidListenerA.remove();
         androidListenerB.remove();
@@ -49,7 +54,7 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
 });
 
 const ExampleNotificationApp = () => {
-  return <App notificationAction={userAction} />;
+  return <App call={call} />;
 };
 
 AppRegistry.registerComponent(appName, () => ExampleNotificationApp);

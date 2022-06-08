@@ -15,7 +15,6 @@ export const registerUser = async (username: string): Promise<any> => {
   };
   const body = JSON.stringify({
     username: username,
-    fcmDeviceToken: '',
     platform: platform,
   });
 
@@ -45,7 +44,6 @@ export const updateUser = async (user: User): Promise<any> => {
     'Content-Type': 'application/json',
   };
   const body = JSON.stringify({
-    id: user.id,
     username: user.username,
     fcmDeviceToken: user.fcmDeviceToken,
     iosDeviceToken: user.iosDeviceToken,
@@ -71,7 +69,7 @@ export const updateUser = async (user: User): Promise<any> => {
   return response;
 };
 
-export const deleteUser = async (user: User): Promise<any> => {
+export const deleteUser = async (username: string): Promise<any> => {
   // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/`;
   const headers = {
@@ -79,8 +77,7 @@ export const deleteUser = async (user: User): Promise<any> => {
     'Content-Type': 'application/json',
   };
   const body = JSON.stringify({
-    username: user.username,
-    webrtcToken: user.webrtcToken,
+    username: username,
   });
 
   const response = fetch(url, {
@@ -111,6 +108,7 @@ export const refreshWebrtcToken = async (user: User): Promise<any> => {
   };
   const body = JSON.stringify({
     username: user.username,
+    platform: platform,
   });
 
   const response = fetch(url, {

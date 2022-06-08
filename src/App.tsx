@@ -20,8 +20,8 @@ export const AuthContext = createContext<AuthContextTypes>(
   {} as AuthContextTypes
 );
 
-const App = (props: any) => {
-  // console.log('App props', props);
+const App = (callProps: any) => {
+  console.log('App props', callProps);
   const [state, dispatch] = React.useReducer(
     (prevState: any, action: any) => {
       switch (action.type) {
@@ -63,7 +63,6 @@ const App = (props: any) => {
         let localStoredUser = await EncryptedStorage.getItem('registered_user');
         let jsonUser = JSON.parse(localStoredUser as string);
         refreshedUser = await refreshWebrtcToken(jsonUser);
-        // let localStoredUser = await EncryptedStorage.getItem('registered_user');
       } catch (e) {
         // Restoring token failed
       }
@@ -83,7 +82,7 @@ const App = (props: any) => {
       signOut: () => dispatch({ type: 'SIGN_OUT' }),
       signUp: async (username: string) => {
         let regUser = await registerUser(username);
-        // console.log('[ signUp ] user:', regUser);
+        console.log('[ signUp ] user:', regUser);
         if (!regUser) {
           showAlert('', 'Cannot connect to the server');
         } else if (regUser.message) {
@@ -112,6 +111,7 @@ const App = (props: any) => {
         ) : (
           <View style={styles.container}>
             <AcuCall
+              call={callProps.call}
               webRTCAccessKey={state.user.webrtcAccessKey}
               webRTCToken={state.user.webrtcToken}
               cloudRegionId={state.user.cloudRegionId}

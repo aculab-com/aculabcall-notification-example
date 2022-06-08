@@ -14,6 +14,7 @@ import {
   AculabCall,
   turnOnSpeaker,
   deleteSpaces,
+  showAlert,
 } from 'react-native-aculab-client';
 import { MenuButton } from './components/MenuButton';
 import { KeypadButton } from './components/KeypadButton';
@@ -32,7 +33,7 @@ import {
 } from './middleware';
 
 import RNCallKeep from 'react-native-callkeep';
-import { Notification } from './types';
+import { AndroidFromKilledCall, Notification } from './types';
 
 const MainCallButtons = (props: any) => {
   return (
@@ -412,10 +413,7 @@ const LogOutButton = (props: any) => {
         colour={COLOURS.CALLING_TEXT}
         onPress={() => {
           signOut();
-          deleteUser({
-            username: props.aculabCall.props.registerClientId,
-            webrtcToken: props.aculabCall.props.webRTCToken,
-          });
+          deleteUser(props.aculabCall.props.registerClientId);
           props.aculabCall.unregister();
         }}
       />
@@ -441,30 +439,15 @@ const notificationHandler = async (props: any) => {
     callee: props.aculabCall.state.callClientId,
   });
 
-  // console.log('notificationHandler response:', response);
+  console.log('notificationHandler response:', response);
+
+  if (response.error) {
+    showAlert('', response.error);
+  }
 
   if (response.message === 'calling_web_interface') {
     props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
   }
-  // try {
-  //   if (response.message === 'success') {
-  //     // this delay is needed so the app has time to initialize on the callee side
-  //     // after receiving notification (iOS)
-  //     setTimeout(() => {
-  //       props.aculabCall.startCall(
-  //         'client',
-  //         props.aculabCall.state.callClientId
-  //       );
-  //     }, 7000);
-  //   } else if (response.message === 'calling_web_interface') {
-  //     props.aculabCall.startCall('client', props.aculabCall.state.callClientId);
-  //   } else {
-  //     // console.log('resp', response);
-  //     showAlert('', response.message);
-  //   }
-  // } catch (err) {
-  //   console.error('[ notificationHandler ]', err);
-  // }
 };
 
 // firebase iOS permission
@@ -479,10 +462,13 @@ const requestUserPermission = async () => {
   }
 };
 
+// import { AcuMobComProps, AcuMobCo } from 'react-native-aculab-client/lib/typescript/types';
+
 class AcuCall extends AculabCall {
-  private androidNotificationListener: any;
+  private fcmNotificationListener: any;
   private answeredCall!: Notification | null;
   private iosDeviceToken!: string;
+  private call: AndroidFromKilledCall | undefined = this.props.call;
 
   componentDidMount() {
     this.register();
@@ -491,11 +477,32 @@ class AcuCall extends AculabCall {
     if (Platform.OS === 'ios') {
       this.initializeVoipNotifications();
     }
+    if (Platform.OS === 'android' && this.call) {
+      this.setState({ callUIInteraction: 'answered' });
+      this.answeredCall = {
+        uuid: this.call.uuid,
+        caller: this.call.caller,
+        callee: this.props.registerClientId,
+        webrtc_ready: true,
+      };
+      // setTimeout(() => {
+      console.log('sending confirm notification ui interaction', this.state.callUIInteraction);
+      sendNotification(this.answeredCall!);
+      // this.call = undefined;
+      this.answeredCall = null;
+      // }, 6000);
+    }
     this.getFcmDeviceToken();
-    this.androidNotificationListener = messaging().onMessage(
+    this.fcmNotificationListener = messaging().onMessage(
       async (remoteMessage) => {
-        console.log('A new FCM message arrived! foreground, platform', Platform.OS);
-        console.log('A new FCM message arrived! foreground, message', remoteMessage);
+        console.log(
+          'A new FCM message arrived! foreground, platform',
+          Platform.OS
+        );
+        console.log(
+          'A new FCM message arrived! foreground, message',
+          remoteMessage
+        );
         if (
           remoteMessage.data!.webrtc_ready === 'true' &&
           this.state.callClientId === remoteMessage.data!.body &&
@@ -534,8 +541,8 @@ class AcuCall extends AculabCall {
     if (Platform.OS === 'ios') {
       this.unregisterVoipNotifications();
     }
-    this.androidNotificationListener(); // this removes androidNotificationListener
-    this.androidNotificationListener = null;
+    this.fcmNotificationListener(); // this removes fcmNotificationListener
+    this.fcmNotificationListener = null;
   }
 
   componentDidUpdate() {
@@ -543,12 +550,14 @@ class AcuCall extends AculabCall {
       this.state.callUIInteraction === 'answered' &&
       this.state.callState === 'incoming call'
     ) {
+      console.log('11111111111111111');
       this.answerCall();
     }
     if (
       this.state.callUIInteraction === 'rejected' &&
       this.state.callState === 'incoming call'
     ) {
+      console.log('22222222222222222');
       this.endCall();
     }
     if (
@@ -557,10 +566,10 @@ class AcuCall extends AculabCall {
       this.answeredCall
     ) {
       console.log('answered call notification fired up from component update');
-      setTimeout(() => {
-        sendNotification(this.answeredCall!);
-        this.answeredCall = null;
-      }, 6000);
+      // setTimeout(() => {
+      sendNotification(this.answeredCall!);
+      this.answeredCall = null;
+      // }, 6000);
     }
     // if (
     //   this.state.callUIInteraction === 'answered' &&
@@ -579,6 +588,28 @@ class AcuCall extends AculabCall {
     // }
   }
 
+  answeredCallAndroid(payload: any) {
+    this.answeredCall = {
+      uuid: payload.uuid,
+      caller: payload.caller,
+      callee: this.props.registerClientId,
+      webrtc_ready: true,
+    };
+    super.answeredCallAndroid(payload);
+    this.setState({ incomingUI: true });
+  }
+
+  displayCustomIncomingUI(
+    handle?: string,
+    callUUID?: string,
+    name?: string
+  ): void {
+    if (!this.call) {
+      super.displayCustomIncomingUI(handle, callUUID, name);
+    }
+    this.call = undefined;
+  }
+
   unregister() {
     super.unregister();
     clearStorage();
@@ -592,14 +623,14 @@ class AcuCall extends AculabCall {
         .then((token) => {
           console.log(token);
           // sent the token to the server
-          setTimeout(() => {
-            updateUser({
-              username: this.props.registerClientId,
-              platform: Platform.OS,
-              webrtcToken: this.props.webRTCToken,
-              fcmDeviceToken: token,
-            });
-          }, 3000);
+          // setTimeout(() => {
+          updateUser({
+            username: this.props.registerClientId,
+            platform: Platform.OS,
+            webrtcToken: this.props.webRTCToken,
+            fcmDeviceToken: token,
+          });
+          // }, 3000);
         });
     } else if (Platform.OS === 'ios') {
       messaging()
@@ -607,15 +638,15 @@ class AcuCall extends AculabCall {
         .then((token) => {
           console.log(token);
           // sent the token to the server
-          setTimeout(() => {
-            updateUser({
-              username: this.props.registerClientId,
-              platform: Platform.OS,
-              webrtcToken: this.props.webRTCToken,
-              fcmDeviceToken: token,
-              iosDeviceToken: this.iosDeviceToken,
-            });
-          }, 3000);
+          // setTimeout(() => {
+          updateUser({
+            username: this.props.registerClientId,
+            platform: Platform.OS,
+            webrtcToken: this.props.webRTCToken,
+            fcmDeviceToken: token,
+            iosDeviceToken: this.iosDeviceToken,
+          });
+          // }, 3000);
         });
     }
   }
@@ -631,7 +662,7 @@ class AcuCall extends AculabCall {
         this.setState({ notificationCall: false });
         this.setState({ incomingUI: false });
       }
-    }, 15000);
+    }, 8000);
   }
 
   /**
@@ -691,12 +722,14 @@ class AcuCall extends AculabCall {
       // --- when receive remote voip push, register your VoIP client, show local notification ... etc
       this.setStatesNotificationCall(notification.uuid);
       // console.log('[ Push Notifications ]', 'Notification:', notification);
+
       sendNotification({
         uuid: notification.uuid,
         caller: notification.callerName,
         callee: this.props.registerClientId,
         webrtc_ready: true,
       });
+
       // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
       VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
     });

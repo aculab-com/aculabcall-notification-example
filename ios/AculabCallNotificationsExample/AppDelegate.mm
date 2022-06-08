@@ -193,6 +193,7 @@
   // --- Process the received push
   [RNVoipPushNotificationManager didReceiveIncomingPushWithPayload:payload forType:(NSString *)type];
 
+//  [NSThread sleepForTimeInterval: 2];
   // --- You should make sure to report to callkit BEFORE execute `completion()`
   [RNCallKeep reportNewIncomingCall: uuid
                              handle: handle
@@ -207,7 +208,7 @@
                             payload: extra
               withCompletionHandler: completion];
   
-  [NSThread sleepForTimeInterval: 5];
+  [NSThread sleepForTimeInterval: 3];
   // --- You don't need to call it if you stored `completion()` and will call it on the js side.
   completion();
 }

@@ -1,3 +1,9 @@
+import { AcuMobComProps } from 'react-native-aculab-client/lib/typescript/types';
+
+export interface AculabCallProps extends AcuMobComProps {
+  call?: string;
+}
+
 export type AculabCallParam = {
   webRTCAccessKey: string;
   webRTCToken: string;
@@ -41,4 +47,10 @@ export interface Notification {
   caller: string;
   callee: string;
   webrtc_ready?: boolean;
+}
+
+export interface AndroidFromKilledCall {
+  uuid: string;
+  caller: string;
+  callee: string;
 }
