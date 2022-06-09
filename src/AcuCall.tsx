@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { styles, COLOURS } from './styles';
 import { RTCView } from 'react-native-webrtc';
+import { name as appName } from '../app.json';
 import {
   AculabCall,
   turnOnSpeaker,
   deleteSpaces,
+  initializeCallKeep,
 } from 'react-native-aculab-client';
 import { MenuButton } from './components/MenuButton';
 import { KeypadButton } from './components/KeypadButton';
@@ -481,7 +483,8 @@ class AcuCall extends AculabCall {
 
   componentDidMount() {
     this.register();
-    this.initializeCallKeep('AculabCall Example');
+    initializeCallKeep(appName);
+    this.addCallKeepListeners();
     requestUserPermission();
     if (Platform.OS === 'ios') {
       this.initializeVoipNotifications();

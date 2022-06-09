@@ -28,7 +28,6 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
       'rejectedCallAndroid',
       (_payload) => {
         console.log('[ index listener ]', 'endCallAndroid', _payload);
-        // this.endCall();
         androidListenerA.remove();
         androidListenerB.remove();
       }
@@ -38,7 +37,6 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
       'answeredCallAndroid',
       (_payload) => {
         console.log('[ index listener ]', 'answerCallAndroid', _payload);
-        // this.answerCall();
         call = {
           uuid: remoteNotification.data.uuid,
           caller: remoteNotification.data.body,
