@@ -14,8 +14,10 @@ export const notificationHandler = async (props: any) => {
   });
 
   console.log('notificationHandler response:', response);
+  props.aculabCall.setState({ outboundCall: true });
 
   if (response.error) {
+    props.aculabCall.setState({ outboundCall: false });
     showAlert('', response.error);
   }
 

@@ -240,20 +240,20 @@ const CallOutComponent = (props: any) => {
         <MenuButton
           title={'Call Client'}
           onPress={() => {
-            if (Platform.OS === 'ios' || Platform.OS === 'android') {
-              if (props.aculabCall.state.callUuid === '') {
-                props.aculabCall.getCallUuid(() => notificationHandler(props));
-              } else {
-                notificationHandler(props);
-              }
+            // if (Platform.OS === 'ios' || Platform.OS === 'android') {
+            if (props.aculabCall.state.callUuid === '') {
+              props.aculabCall.getCallUuid(() => notificationHandler(props));
             } else {
-              props.aculabCall.getCallUuid(() =>
-                props.aculabCall.startCall(
-                  'client',
-                  props.aculabCall.state.callClientId
-                )
-              );
+              notificationHandler(props);
             }
+            // } else {
+            //   props.aculabCall.getCallUuid(() =>
+            //     props.aculabCall.startCall(
+            //       'client',
+            //       props.aculabCall.state.callClientId
+            //     )
+            //   );
+            // }
           }}
         />
       </View>
@@ -271,7 +271,8 @@ const DisplayClientCall = (props: any) => {
     if (
       props.aculabCall.state.callState === 'calling' ||
       props.aculabCall.state.callState === 'ringing' ||
-      props.aculabCall.state.callState === 'connecting'
+      props.aculabCall.state.callState === 'connecting' ||
+      props.aculabCall.state.outboundCall
     ) {
       return (
         <View style={styles.center}>
@@ -369,7 +370,7 @@ const DisplayClientCall = (props: any) => {
 const CallDisplayHandler = (props: any) => {
   if (
     props.aculabCall.state.callState === 'incoming call' ||
-    props.aculabCall.state.incomingUI === true
+    props.aculabCall.state.inboundCall
   ) {
     return (
       <View style={styles.incomingContainer}>
@@ -381,14 +382,20 @@ const CallDisplayHandler = (props: any) => {
         </View>
       </View>
     );
-  } else if (props.aculabCall.state.callState === 'idle') {
+  } else if (
+    props.aculabCall.state.callState === 'idle' &&
+    !props.aculabCall.state.outboundCall
+  ) {
     return (
       <ScrollView>
         <CallOutComponent aculabCall={props.aculabCall} />
       </ScrollView>
     );
   } else {
-    if (props.aculabCall.state.callOptions.receiveVideo) {
+    if (
+      props.aculabCall.state.callOptions.receiveVideo ||
+      props.aculabCall.state.outboundCall
+    ) {
       return <DisplayClientCall aculabCall={props.aculabCall} />;
     } else {
       return <DialKeypad aculabCall={props.aculabCall} />;
@@ -404,7 +411,10 @@ const CallDisplayHandler = (props: any) => {
 const CallButtonsHandler = (props: any) => {
   if (props.aculabCall.state.callState === 'incoming call') {
     return <View />;
-  } else if (props.aculabCall.state.callState !== 'idle') {
+  } else if (
+    props.aculabCall.state.callState !== 'idle' ||
+    props.aculabCall.state.outboundCall
+  ) {
     if (props.aculabCall.state.callOptions.receiveVideo) {
       // calling client
       if (props.aculabCall.state.remoteStream) {
@@ -649,7 +659,7 @@ class AcuCall extends AculabCall {
         this.setState({ notificationCall: false });
         this.setState({ incomingUI: false });
       }
-    }, 8000);
+    }, 15000);
   }
 
   /**
@@ -662,6 +672,7 @@ class AcuCall extends AculabCall {
     this.setState({ callKeepCallActive: true });
     this.setState({ callUIInteraction: 'none' });
     this.setState({ notificationCall: true });
+    this.setState({ inboundCall: true });
     this.terminateInboundUIIfNotCall();
   }
 
@@ -767,7 +778,13 @@ class AcuCall extends AculabCall {
                 Registered as {this.props.registerClientId}
               </Text>
               <Text style={styles.basicText}>
-                State: {this.state.callState}
+                WebRTC state: {this.state.callState}
+              </Text>
+              <Text style={styles.basicText}>
+                inboundCall: {this.state.inboundCall.toString()}
+              </Text>
+              <Text style={styles.basicText}>
+                outboundCall: {this.state.outboundCall.toString()}
               </Text>
             </View>
           ) : (
