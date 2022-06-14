@@ -6,6 +6,7 @@ const platform = Platform.OS;
 
 // Notification server base url
 const URL_BASE = 'http://192.168.1.152:3500/';
+// const URL_BASE = 'http://192.168.0.12:3500/';
 
 /**
  * create new user on the server
@@ -207,6 +208,7 @@ export const sendNotification = async (
     caller: notification.caller,
     callee: notification.callee,
     webrtc_ready: notification.webrtc_ready,
+    call_rejected: notification.call_rejected,
   });
 
   const response = fetch(url, {
@@ -219,6 +221,7 @@ export const sendNotification = async (
       return blob;
     })
     .then((data) => {
+      console.log('[ sendNotification ] data', data);
       return data;
     })
     .catch((error) => {

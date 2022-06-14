@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Image,
   Platform,
+  AppState,
 } from 'react-native';
 import { styles, COLOURS } from './styles';
 import { RTCView } from 'react-native-webrtc';
@@ -18,7 +19,6 @@ import {
   initializeCallKeep,
 } from 'react-native-aculab-client';
 import { MenuButton } from './components/MenuButton';
-import { KeypadButton } from './components/KeypadButton';
 import { CallButton } from './components/CallButton';
 import { RoundButton } from './components/RoundButton';
 
@@ -35,6 +35,7 @@ import {
 import RNCallKeep from 'react-native-callkeep';
 import { AndroidFromKilledCall, Notification } from './types';
 import { notificationHandler } from './handlers';
+import { CallKeypad } from './components/CallKeypad';
 
 /**
  * Main call buttons component
@@ -71,8 +72,7 @@ const MainCallButtons = (props: any) => {
 const DialKeypad = (props: any) => {
   return (
     <View style={styles.dialKeypad}>
-      {props.aculabCall.state.callState === 'calling' ||
-      props.aculabCall.state.callState === 'ringing' ? (
+      {props.aculabCall.state.outboundCall ? (
         <View>
           <Text style={styles.callingText}>
             Calling {props.aculabCall.state.serviceName}
@@ -83,66 +83,9 @@ const DialKeypad = (props: any) => {
           <Text style={styles.callingText}>
             Service {props.aculabCall.state.serviceName}
           </Text>
+          <CallKeypad props={props} />
         </View>
       )}
-      <View>
-        <View style={styles.callButtonsContainer}>
-          <KeypadButton
-            title={'1'}
-            onPress={() => props.aculabCall.sendDtmf('1')}
-          />
-          <KeypadButton
-            title={'2'}
-            onPress={() => props.aculabCall.sendDtmf('2')}
-          />
-          <KeypadButton
-            title={'3'}
-            onPress={() => props.aculabCall.sendDtmf('3')}
-          />
-        </View>
-        <View style={styles.callButtonsContainer}>
-          <KeypadButton
-            title={'4'}
-            onPress={() => props.aculabCall.sendDtmf('4')}
-          />
-          <KeypadButton
-            title={'5'}
-            onPress={() => props.aculabCall.sendDtmf('5')}
-          />
-          <KeypadButton
-            title={'6'}
-            onPress={() => props.aculabCall.sendDtmf('6')}
-          />
-        </View>
-        <View style={styles.callButtonsContainer}>
-          <KeypadButton
-            title={'7'}
-            onPress={() => props.aculabCall.sendDtmf('7')}
-          />
-          <KeypadButton
-            title={'8'}
-            onPress={() => props.aculabCall.sendDtmf('8')}
-          />
-          <KeypadButton
-            title={'9'}
-            onPress={() => props.aculabCall.sendDtmf('9')}
-          />
-        </View>
-        <View style={styles.callButtonsContainer}>
-          <KeypadButton
-            title={'*'}
-            onPress={() => props.aculabCall.sendDtmf('*')}
-          />
-          <KeypadButton
-            title={'0'}
-            onPress={() => props.aculabCall.sendDtmf('0')}
-          />
-          <KeypadButton
-            title={'#'}
-            onPress={() => props.aculabCall.sendDtmf('#')}
-          />
-        </View>
-      </View>
     </View>
   );
 };
@@ -270,12 +213,7 @@ const CallOutComponent = (props: any) => {
  */
 const DisplayClientCall = (props: any) => {
   if (!props.aculabCall.state.remoteStream) {
-    if (
-      props.aculabCall.state.callState === 'calling' ||
-      props.aculabCall.state.callState === 'ringing' ||
-      props.aculabCall.state.callState === 'connecting' ||
-      props.aculabCall.state.outboundCall
-    ) {
+    if (props.aculabCall.state.outboundCall) {
       return (
         <View style={styles.center}>
           <Text style={styles.callingText}>
@@ -370,10 +308,7 @@ const DisplayClientCall = (props: any) => {
  * @returns view
  */
 const CallDisplayHandler = (props: any) => {
-  if (
-    props.aculabCall.state.callState === 'incoming call' ||
-    props.aculabCall.state.inboundCall
-  ) {
+  if (props.aculabCall.state.inboundCall) {
     return (
       <View style={styles.incomingContainer}>
         <View style={styles.center}>
@@ -411,7 +346,7 @@ const CallDisplayHandler = (props: any) => {
  * @returns view
  */
 const CallButtonsHandler = (props: any) => {
-  if (props.aculabCall.state.callState === 'incoming call') {
+  if (props.aculabCall.state.inboundCall) {
     return <View />;
   } else if (
     props.aculabCall.state.callState !== 'idle' ||
@@ -440,6 +375,7 @@ const CallButtonsHandler = (props: any) => {
 };
 
 /**
+ * component\
  * Log out and, delete user from server and local storage
  * @param props AculabCall instance
  * @returns view
@@ -471,7 +407,7 @@ const requestUserPermission = async () => {
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
   if (enabled) {
-    console.log('Authorization status:', authStatus);
+    // console.log('Authorization status:', authStatus);
   }
 };
 
@@ -489,8 +425,10 @@ class AcuCall extends AculabCall {
     if (Platform.OS === 'ios') {
       this.initializeVoipNotifications();
     }
+    // Android send webrtc ready notification when call accepted from killed state
     if (Platform.OS === 'android' && this.call) {
       this.setState({ callUIInteraction: 'answered' });
+      this.setState({ inboundCall: true });
       this.answeredCall = {
         uuid: this.call.uuid,
         caller: this.call.caller,
@@ -512,13 +450,20 @@ class AcuCall extends AculabCall {
           'A new FCM message arrived! foreground, message',
           remoteMessage
         );
+        // place webrtc call when webrtc ready notification arrived
         if (
           remoteMessage.data!.webrtc_ready === 'true' &&
           this.state.callClientId === remoteMessage.data!.body &&
           this.state.callState === 'idle'
         ) {
           this.startCall('client', this.state.callClientId);
-        } else if (
+        }
+        // if call rejected notification default outbound call state
+        else if (remoteMessage.data!.call_rejected === 'true') {
+          this.setState({ outboundCall: false });
+        }
+        // Android incoming call notification - display incoming call UI notification
+        else if (
           Platform.OS === 'android' &&
           remoteMessage.data!.title === 'Incoming Call' &&
           this.state.callState === 'idle'
@@ -534,8 +479,10 @@ class AcuCall extends AculabCall {
             callee: this.props.registerClientId,
             webrtc_ready: true,
           };
+          console.log('1111111111', this.answeredCall);
           sendNotification(this.answeredCall);
           this.setStatesNotificationCall(remoteMessage.data!.uuid);
+          this.answeredCall = null;
         }
       }
     );
@@ -552,18 +499,22 @@ class AcuCall extends AculabCall {
   }
 
   componentDidUpdate() {
+    // answer call
     if (
       this.state.callUIInteraction === 'answered' &&
       this.state.callState === 'incoming call'
     ) {
       this.answerCall();
     }
+    // end call
     if (
       this.state.callUIInteraction === 'rejected' &&
       this.state.callState === 'incoming call'
     ) {
       this.endCall();
     }
+    // send Answered call notification when app runs and lock screen - iOS
+    // send Answered call notification when app runs but not focused - Android
     if (
       this.state.callUIInteraction === 'answered' &&
       this.state.incomingUI &&
@@ -571,6 +522,7 @@ class AcuCall extends AculabCall {
     ) {
       console.log('answered call notification fired up from component update');
       sendNotification(this.answeredCall!);
+      this.setState({ inboundCall: true });
       this.answeredCall = null;
     }
   }
@@ -588,6 +540,28 @@ class AcuCall extends AculabCall {
     };
     super.answeredCallAndroid(payload);
     this.setState({ incomingUI: true });
+  }
+
+  // rejectedCallAndroid(payload: any) {
+  //   super.rejectedCallAndroid(payload);
+  //   sendNotification({
+  //     uuid: payload.uuid,
+  //     caller: payload.caller,
+  //     callee: this.props.registerClientId,
+  //     call_rejected: true,
+  //   });
+  // }
+
+  endCall(): void {
+    super.endCall();
+    if (this.answeredCall) {
+      sendNotification({
+        uuid: this.answeredCall.uuid,
+        caller: this.answeredCall.caller,
+        callee: this.props.registerClientId,
+        call_rejected: true,
+      });
+    }
   }
 
   /**
@@ -625,7 +599,7 @@ class AcuCall extends AculabCall {
       messaging()
         .getToken()
         .then((token) => {
-          console.log(token);
+          // console.log(token);
           // sent the token to the server
           updateUser({
             username: this.props.registerClientId,
@@ -638,7 +612,7 @@ class AcuCall extends AculabCall {
       messaging()
         .getToken()
         .then((token) => {
-          console.log(token);
+          // console.log(token);
           // sent the token to the server
           updateUser({
             username: this.props.registerClientId,
@@ -702,8 +676,6 @@ class AcuCall extends AculabCall {
     // ===== Step 1: subscribe `register` event =====
     VoipPushNotification.addEventListener('register', (token) => {
       // --- send token to your apn provider server
-      // The timeout is not needed is server is using database but with writing into files the server resets itself.
-      // Therefore, this delay makes time for server to reset after registering user request.
       this.iosDeviceToken = token;
     });
 
@@ -718,6 +690,11 @@ class AcuCall extends AculabCall {
         callee: this.props.registerClientId,
         webrtc_ready: true,
       };
+
+      // Don't send notification if app runs but screen is locked
+      if (AppState.currentState !== 'background') {
+        sendNotification(this.answeredCall!);
+      }
 
       // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
       VoipPushNotification.onVoipNotificationCompleted(notification.uuid);

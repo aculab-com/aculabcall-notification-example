@@ -75,7 +75,7 @@ const App = (callProps: any) => {
       signOut: () => dispatch({ type: 'SIGN_OUT' }),
       signUp: async (username: string) => {
         let regUser = await registerUser(username);
-        console.log('[ signUp ] user:', regUser);
+        // console.log('[ signUp ] user:', regUser);
         if (!regUser) {
           showAlert('', 'Cannot connect to the server');
         } else if (regUser.message) {

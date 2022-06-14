@@ -47,6 +47,7 @@ export interface Notification {
   caller: string;
   callee: string;
   webrtc_ready?: boolean;
+  call_rejected?: boolean;
 }
 
 export interface AndroidFromKilledCall {

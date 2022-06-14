@@ -8,6 +8,7 @@ import { name as appName } from './app.json';
 import messaging from '@react-native-firebase/messaging';
 import { incomingCallNotification } from 'react-native-aculab-client';
 import { aculabClientEvent } from 'react-native-aculab-client/src/AculabClientModule';
+import { sendNotification } from './src/middleware';
 
 let call;
 
@@ -28,6 +29,12 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
       'rejectedCallAndroid',
       (_payload) => {
         console.log('[ index listener ]', 'endCallAndroid', _payload);
+        sendNotification({
+          uuid: _payload.uuid,
+          caller: _payload.caller,
+          callee: 'N/A',
+          call_rejected: !_payload.callAccepted,
+        });
         androidListenerA.remove();
         androidListenerB.remove();
       }
