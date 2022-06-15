@@ -209,6 +209,7 @@ export const sendNotification = async (
     callee: notification.callee,
     webrtc_ready: notification.webrtc_ready,
     call_rejected: notification.call_rejected,
+    call_cancelled: notification.call_cancelled,
   });
 
   const response = fetch(url, {

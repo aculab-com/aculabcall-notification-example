@@ -33,7 +33,7 @@ import {
 } from './middleware';
 
 import RNCallKeep from 'react-native-callkeep';
-import { AndroidFromKilledCall, Notification } from './types';
+import type { AndroidFromKilledCall, Notification } from './types';
 import { notificationHandler } from './handlers';
 import { CallKeypad } from './components/CallKeypad';
 
@@ -454,7 +454,8 @@ class AcuCall extends AculabCall {
         if (
           remoteMessage.data!.webrtc_ready === 'true' &&
           this.state.callClientId === remoteMessage.data!.body &&
-          this.state.callState === 'idle'
+          this.state.callState === 'idle' &&
+          this.state.outboundCall
         ) {
           this.startCall('client', this.state.callClientId);
         }
@@ -479,7 +480,6 @@ class AcuCall extends AculabCall {
             callee: this.props.registerClientId,
             webrtc_ready: true,
           };
-          console.log('1111111111', this.answeredCall);
           sendNotification(this.answeredCall);
           this.setStatesNotificationCall(remoteMessage.data!.uuid);
           this.answeredCall = null;
@@ -554,7 +554,16 @@ class AcuCall extends AculabCall {
 
   endCall(): void {
     super.endCall();
-    if (this.answeredCall) {
+    // send notification that incoming call was rejected by callee
+    if (this.state.outboundCall) {
+      this.answeredCall = null;
+      sendNotification({
+        uuid: this.state.callUuid as string,
+        caller: this.props.registerClientId,
+        callee: this.state.callClientId,
+        call_cancelled: true,
+      });
+    } else if (this.answeredCall) {
       sendNotification({
         uuid: this.answeredCall.uuid,
         caller: this.answeredCall.caller,
@@ -625,19 +634,19 @@ class AcuCall extends AculabCall {
     }
   }
 
-  /**
-   * if the call does not connect withing the time after call being answered it terminates callkeep
-   */
-  async terminateInboundUIIfNotCall() {
-    setTimeout(() => {
-      if (this.state.callState === 'idle' && this.state.callKeepCallActive) {
-        RNCallKeep.endCall(this.state.callUuid as string);
-        this.setState({ callKeepCallActive: false });
-        this.setState({ notificationCall: false });
-        this.setState({ incomingUI: false });
-      }
-    }, 15000);
-  }
+  // /**
+  //  * if the call does not connect withing the time after call being answered it terminates callkeep
+  //  */
+  // async terminateInboundUIIfNotCall() {
+  //   setTimeout(() => {
+  //     if (this.state.callState === 'idle' && this.state.callKeepCallActive) {
+  //       RNCallKeep.endCall(this.state.callUuid as string);
+  //       this.setState({ callKeepCallActive: false });
+  //       this.setState({ notificationCall: false });
+  //       this.setState({ incomingUI: false });
+  //     }
+  //   }, 15000);
+  // }
 
   /**
    * Set AculabCall states for VoIP Notification
@@ -650,7 +659,7 @@ class AcuCall extends AculabCall {
     this.setState({ callUIInteraction: 'none' });
     this.setState({ notificationCall: true });
     this.setState({ inboundCall: true });
-    this.terminateInboundUIIfNotCall();
+    // this.terminateInboundUIIfNotCall();
   }
 
   /**
