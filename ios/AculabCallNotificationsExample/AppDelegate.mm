@@ -188,7 +188,7 @@
   NSDictionary *extra = [payload.dictionaryPayload valueForKeyPath:@"custom.path.to.data"]; /* use this to pass any special data (ie. from your notification) down to RN. Can also be `nil` */
 
   // --- this is optional, only required if you want to call `completion()` on the js side
-  [RNVoipPushNotificationManager addCompletionHandler:uuid completionHandler:completion];
+//  [RNVoipPushNotificationManager addCompletionHandler:uuid completionHandler:completion];
 
   // --- Process the received push
   [RNVoipPushNotificationManager didReceiveIncomingPushWithPayload:payload forType:(NSString *)type];
@@ -208,7 +208,6 @@
                             payload: extra
               withCompletionHandler: completion];
   
-//  [NSThread sleepForTimeInterval: 3];
   // --- You don't need to call it if you stored `completion()` and will call it on the js side.
   completion();
 }

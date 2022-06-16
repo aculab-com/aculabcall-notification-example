@@ -8,6 +8,7 @@ import {
   Image,
   Platform,
   AppState,
+  Linking,
 } from 'react-native';
 import { styles, COLOURS } from './styles';
 import { RTCView } from 'react-native-webrtc';
@@ -17,6 +18,8 @@ import {
   turnOnSpeaker,
   deleteSpaces,
   initializeCallKeep,
+  cancelIncomingCallNotification,
+  showAlert,
 } from 'react-native-aculab-client';
 import { MenuButton } from './components/MenuButton';
 import { CallButton } from './components/CallButton';
@@ -437,6 +440,7 @@ class AcuCall extends AculabCall {
       };
       console.log('sent confirm notification', this.state.callUIInteraction);
       sendNotification(this.answeredCall!);
+      this.answeredCallNotReceived();
       this.answeredCall = null;
     }
     this.getFcmDeviceToken();
@@ -462,6 +466,14 @@ class AcuCall extends AculabCall {
         // if call rejected notification default outbound call state
         else if (remoteMessage.data!.call_rejected === 'true') {
           this.setState({ outboundCall: false });
+        }
+        // dismiss full screen notification
+        else if (
+          remoteMessage.data!.call_cancelled === 'true' &&
+          Platform.OS === 'android'
+        ) {
+          cancelIncomingCallNotification();
+          Linking.openURL('app://testApp');
         }
         // Android incoming call notification - display incoming call UI notification
         else if (
@@ -634,19 +646,21 @@ class AcuCall extends AculabCall {
     }
   }
 
-  // /**
-  //  * if the call does not connect withing the time after call being answered it terminates callkeep
-  //  */
-  // async terminateInboundUIIfNotCall() {
-  //   setTimeout(() => {
-  //     if (this.state.callState === 'idle' && this.state.callKeepCallActive) {
-  //       RNCallKeep.endCall(this.state.callUuid as string);
-  //       this.setState({ callKeepCallActive: false });
-  //       this.setState({ notificationCall: false });
-  //       this.setState({ incomingUI: false });
-  //     }
-  //   }, 15000);
-  // }
+  /**
+   * if the call does not connect withing the time after call being answered it terminates callkeep
+   */
+  async answeredCallNotReceived() {
+    setTimeout(() => {
+      if (this.state.callState === 'idle' && this.state.inboundCall) {
+        // RNCallKeep.endCall(this.state.callUuid as string);
+        // this.setState({ callKeepCallActive: false });
+        this.setState({ notificationCall: false });
+        this.setState({ incomingUI: false });
+        this.setState({ inboundCall: false });
+        showAlert('', 'Connection issue');
+      }
+    }, 3000);
+  }
 
   /**
    * Set AculabCall states for VoIP Notification
@@ -659,7 +673,6 @@ class AcuCall extends AculabCall {
     this.setState({ callUIInteraction: 'none' });
     this.setState({ notificationCall: true });
     this.setState({ inboundCall: true });
-    // this.terminateInboundUIIfNotCall();
   }
 
   /**
@@ -706,7 +719,7 @@ class AcuCall extends AculabCall {
       }
 
       // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
-      VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
+      // VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
     });
 
     // ===== Step 3: subscribe `didLoadWithEvents` event =====

@@ -15,6 +15,7 @@ import { sendNotification } from './src/middleware';
 import RNCallKeep from 'react-native-callkeep';
 
 let call;
+let fullScreenCall;
 
 // Register background handler
 messaging().setBackgroundMessageHandler(async (remoteNotification) => {
@@ -40,11 +41,13 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
             callee: 'N/A',
             call_rejected: !_payload.callAccepted,
           });
+          if (fullScreenCall) {
+            Linking.openURL('app://testApp');
+          }
           androidListenerA.remove();
           androidListenerB.remove();
         }
       );
-      // @ts-ignore: aculabClientEvent is not undefined for android
       const androidListenerB = aculabClientEvent.addListener(
         'answeredCallAndroid',
         (_payload) => {
@@ -58,6 +61,17 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
           Linking.openURL('app://testApp');
           androidListenerA.remove();
           androidListenerB.remove();
+        }
+      );
+      const androidListenerC = aculabClientEvent.addListener(
+        'fullScreenCall',
+        (_payload) => {
+          console.log('[ index listener ]', 'fullScreenCall', _payload);
+          // Linking.openURL('app://testApp');
+          // androidListenerA.remove();
+          // androidListenerB.remove();
+          fullScreenCall = true;
+          androidListenerC.remove();
         }
       );
     } else if (remoteNotification.data.call_cancelled) {
