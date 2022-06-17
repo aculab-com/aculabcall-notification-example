@@ -1,3 +1,6 @@
+// middleware
+// IP addresses white list in android/app/src/main/res/xml/network_security_config
+
 import { Platform } from 'react-native';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import type { Notification, User } from './types';
@@ -5,8 +8,8 @@ import type { Notification, User } from './types';
 const platform = Platform.OS;
 
 // Notification server base url
-const URL_BASE = 'http://192.168.1.152:3500/';
-// const URL_BASE = 'http://192.168.0.12:3500/';
+// const URL_BASE = 'http://192.168.1.152:3500/';
+const URL_BASE = 'http://192.168.0.12:3500/';
 
 /**
  * create new user on the server
@@ -14,7 +17,6 @@ const URL_BASE = 'http://192.168.1.152:3500/';
  * @returns server response
  */
 export const registerUser = async (username: string): Promise<any> => {
-  // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/`;
   const headers = {
     'Accept': 'application/json',
@@ -50,7 +52,6 @@ export const registerUser = async (username: string): Promise<any> => {
  * @returns server response
  */
 export const updateUser = async (user: User): Promise<any> => {
-  // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/`;
   const headers = {
     'Accept': 'application/json',
@@ -88,7 +89,6 @@ export const updateUser = async (user: User): Promise<any> => {
  * @returns server response
  */
 export const deleteUser = async (username: string): Promise<any> => {
-  // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}users/`;
   const headers = {
     'Accept': 'application/json',
@@ -118,18 +118,17 @@ export const deleteUser = async (username: string): Promise<any> => {
 
 /**
  * Refresh WebRTC Token
- * @param {User} user user that will get Token refreshed
+ * @param {string} username user that will get Token refreshed
  * @returns server response
  */
-export const refreshWebrtcToken = async (user: User): Promise<any> => {
-  // IP addresses white list in android/app/src/main/res/network_security_config
+export const refreshWebrtcToken = async (username: string): Promise<any> => {
   const url = `${URL_BASE}users/get_token/`;
   const headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
   const body = JSON.stringify({
-    username: user.username,
+    username: username,
     platform: platform,
   });
 
@@ -159,7 +158,6 @@ export const refreshWebrtcToken = async (user: User): Promise<any> => {
 export const sendCallNotification = async (
   notification: Notification
 ): Promise<any> => {
-  // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}notifications/call`;
   const headers = {
     'Accept': 'application/json',
@@ -197,7 +195,6 @@ export const sendCallNotification = async (
 export const sendNotification = async (
   notification: Notification
 ): Promise<any> => {
-  // IP addresses white list in android/app/src/main/res/network_security_config
   const url = `${URL_BASE}notifications/`;
   const headers = {
     'Accept': 'application/json',
@@ -243,7 +240,7 @@ export const storeRegisteredUser = async (
   try {
     await EncryptedStorage.setItem(itemName, JSON.stringify(jsonData));
 
-    // Congrats! You've just stored your first value!
+    // Value stored
   } catch (error) {
     // There was an error on the native side
   }
@@ -255,7 +252,7 @@ export const storeRegisteredUser = async (
 export const clearStorage = async () => {
   try {
     await EncryptedStorage.clear();
-    // Congrats! You've just cleared the device storage!
+    // Storage cleared
   } catch (err) {
     console.error('[ AcuCall ]', 'clearStorage error', err);
   }

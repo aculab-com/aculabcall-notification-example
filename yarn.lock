@@ -6378,7 +6378,7 @@
   "version" "16.13.1"
 
 "react-native-aculab-client@file:react-native-aculab-client-1.0.3.tgz":
-  "integrity" "sha512-huC+Sb0Og/K9sv2NJVs6wKONQ1Jz/5kLEoroIIv0X+7Jl1HQ9zEK0WZSaU3cE5R0JC8n/Nw5qvKKOejCdXhPhA=="
+  "integrity" "sha512-L8GOcbcjDsQizE9bA+Sl7TFF5rvW0ZO+xs9jOHcqgKv9L6l2gBDprAW4HjtFfH+2oKurHdGEBw83JyU8vdoqHA=="
   "resolved" "file:react-native-aculab-client-1.0.3.tgz"
   "version" "1.0.3"
   dependencies:

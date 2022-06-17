@@ -21,7 +21,6 @@ export const AuthContext = createContext<AuthContextTypes>(
 );
 
 const App = (callProps: any) => {
-  console.log('App props', callProps);
   const [state, dispatch] = React.useReducer(
     (prevState: any, action: any) => {
       switch (action.type) {
@@ -60,7 +59,7 @@ const App = (callProps: any) => {
       try {
         let localStoredUser = await EncryptedStorage.getItem('registered_user');
         let jsonUser = JSON.parse(localStoredUser as string);
-        refreshedUser = await refreshWebrtcToken(jsonUser);
+        refreshedUser = await refreshWebrtcToken(jsonUser.username);
       } catch (err: any) {
         // Restoring user failed
       }
@@ -75,7 +74,6 @@ const App = (callProps: any) => {
       signOut: () => dispatch({ type: 'SIGN_OUT' }),
       signUp: async (username: string) => {
         let regUser = await registerUser(username);
-        // console.log('[ signUp ] user:', regUser);
         if (!regUser) {
           showAlert('', 'Cannot connect to the server');
         } else if (regUser.message) {

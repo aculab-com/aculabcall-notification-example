@@ -31,6 +31,7 @@ import { AuthContext } from './App';
 import {
   clearStorage,
   deleteUser,
+  refreshWebrtcToken,
   sendNotification,
   updateUser,
 } from './middleware';
@@ -481,6 +482,7 @@ class AcuCall extends AculabCall {
           remoteMessage.data!.title === 'Incoming Call' &&
           this.state.callState === 'idle'
         ) {
+          this.refreshWebRtcUser();
           RNCallKeep.displayIncomingCall(
             remoteMessage.data!.uuid,
             remoteMessage.data!.body,
@@ -498,6 +500,21 @@ class AcuCall extends AculabCall {
         }
       }
     );
+  }
+
+  /**
+   * Refresh WebRTC user by refreshing token and registering.\
+   * This function is used to make sure that when app is running on phone in background for\
+   * prolonged period of time, incoming call call can be accepted and does not result in error\
+   * where sip connection times out and dies on the background.
+   */
+  async refreshWebRtcUser() {
+    const refreshedUser = await refreshWebrtcToken(this.props.registerClientId);
+    if (refreshedUser) {
+      this.setState({ webRTCToken: refreshedUser.webrtcToken }, () => {
+        this.register(this.state.webRTCToken);
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -705,6 +722,7 @@ class AcuCall extends AculabCall {
     // --- this.onVoipPushNotificationReceived
     VoipPushNotification.addEventListener('notification', (notification) => {
       // --- when receive remote voip push, register your VoIP client, show local notification ... etc
+      this.refreshWebRtcUser();
       this.setStatesNotificationCall(notification.uuid);
       this.answeredCall = {
         uuid: notification.uuid,
