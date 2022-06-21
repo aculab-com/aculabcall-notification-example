@@ -17,7 +17,9 @@ import RNCallKeep from 'react-native-callkeep';
 let call;
 let fullScreenCall;
 
-// Register background handler
+/**
+ * Receive background notification via FCM
+ */
 messaging().setBackgroundMessageHandler(async (remoteNotification) => {
   console.log('background notification arrived', remoteNotification.data);
 
@@ -67,9 +69,6 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
         'fullScreenCall',
         (_payload) => {
           console.log('[ index listener ]', 'fullScreenCall', _payload);
-          // Linking.openURL('app://testApp');
-          // androidListenerA.remove();
-          // androidListenerB.remove();
           fullScreenCall = true;
           androidListenerC.remove();
         }
