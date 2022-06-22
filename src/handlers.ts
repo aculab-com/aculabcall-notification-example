@@ -13,7 +13,6 @@ export const notificationHandler = async (props: any) => {
     callee: props.aculabCall.state.callClientId,
   });
 
-  console.log('notificationHandler response:', response);
   props.aculabCall.setState({ outboundCall: true });
 
   if (response.error) {

@@ -219,7 +219,6 @@ export const sendNotification = async (
       return blob;
     })
     .then((data) => {
-      console.log('[ sendNotification ] data', data);
       return data;
     })
     .catch((error) => {

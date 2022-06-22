@@ -439,7 +439,6 @@ class AcuCall extends AculabCall {
         callee: this.props.registerClientId,
         webrtc_ready: true,
       };
-      console.log('sent confirm notification', this.state.callUIInteraction);
       sendNotification(this.answeredCall!);
       this.answeredCallNotReceived();
       this.answeredCall = null;
@@ -447,14 +446,6 @@ class AcuCall extends AculabCall {
     this.getFcmDeviceToken();
     this.fcmNotificationListener = messaging().onMessage(
       async (remoteMessage) => {
-        console.log(
-          'A new FCM message arrived! foreground, platform',
-          Platform.OS
-        );
-        console.log(
-          'A new FCM message arrived! foreground, message',
-          remoteMessage
-        );
         // place webrtc call when webrtc ready notification arrived
         if (
           remoteMessage.data!.webrtc_ready === 'true' &&
@@ -549,7 +540,6 @@ class AcuCall extends AculabCall {
       this.state.incomingUI &&
       this.answeredCall
     ) {
-      console.log('answered call notification fired up from component update');
       sendNotification(this.answeredCall!);
       this.setState({ inboundCall: true });
       this.answeredCall = null;
@@ -637,7 +627,6 @@ class AcuCall extends AculabCall {
       messaging()
         .getToken()
         .then((token) => {
-          // console.log(token);
           // sent the token to the server
           updateUser({
             username: this.props.registerClientId,
@@ -650,7 +639,6 @@ class AcuCall extends AculabCall {
       messaging()
         .getToken()
         .then((token) => {
-          // console.log(token);
           // sent the token to the server
           updateUser({
             username: this.props.registerClientId,
@@ -744,14 +732,12 @@ class AcuCall extends AculabCall {
     VoipPushNotification.addEventListener('didLoadWithEvents', (events) => {
       // --- this will fire when there are events occurred before js bridge initialized
       // --- use this event to execute your event handler manually by event type
-      // console.log('[ Push Notifications ]', 'Events:', events);
 
       if (!events || !Array.isArray(events) || events.length < 1) {
         return;
       }
       for (let voipPushEvent of events) {
         let { name, data } = voipPushEvent;
-        // console.log('[ Push Notifications ]', 'Event Name:', name);
         if (
           name ===
           (VoipPushNotification as any) // ignore missing type in the package
@@ -762,7 +748,6 @@ class AcuCall extends AculabCall {
           (VoipPushNotification as any) // ignore missing type in the package
             .RNVoipPushRemoteNotificationReceivedEvent
         ) {
-          // console.log('[ Push Notifications ]', 'Event Received data', data);
           if (data.uuid) {
             this.setStatesNotificationCall(data.uuid);
             this.answeredCall = {

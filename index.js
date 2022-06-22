@@ -21,7 +21,7 @@ let fullScreenCall;
  * Receive background notification via FCM
  */
 messaging().setBackgroundMessageHandler(async (remoteNotification) => {
-  console.log('background notification arrived', remoteNotification.data);
+  // console.log('background notification arrived', remoteNotification.data);
 
   if (Platform.OS === 'android') {
     if (remoteNotification.data.title === 'Incoming Call') {
@@ -36,7 +36,6 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
       const androidListenerA = aculabClientEvent.addListener(
         'rejectedCallAndroid',
         (_payload) => {
-          console.log('[ index listener ]', 'endCallAndroid', _payload);
           sendNotification({
             uuid: _payload.uuid,
             caller: _payload.caller,
@@ -53,7 +52,6 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
       const androidListenerB = aculabClientEvent.addListener(
         'answeredCallAndroid',
         (_payload) => {
-          console.log('[ index listener ]', 'answerCallAndroid', _payload);
           call = {
             uuid: remoteNotification.data.uuid,
             caller: remoteNotification.data.body,
@@ -68,7 +66,6 @@ messaging().setBackgroundMessageHandler(async (remoteNotification) => {
       const androidListenerC = aculabClientEvent.addListener(
         'fullScreenCall',
         (_payload) => {
-          console.log('[ index listener ]', 'fullScreenCall', _payload);
           fullScreenCall = true;
           androidListenerC.remove();
         }
