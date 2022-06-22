@@ -66,8 +66,7 @@ curl -v --header "apns-topic: <App ID>.voip" --header "apns-push-type: voip" --h
 
 This certificate needs to be placed in the [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server#apple-apn).
 
-handy links:
-
+handy links:  
 [sending_notification_requests_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)
 
 [establishing_a_certificate-based_connection_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_certificate-based_connection_to_apns)
@@ -76,25 +75,22 @@ handy links:
 
 ### FCM
 
-Register the example app with firebase
+register you app on firebase console <https://console.firebase.google.com>
 
-get Google-services.json file (steps 1-3 of [Firebase Android documentation](https://firebase.google.com/docs/android/setup))
-
+Register the example app with firebase  
+get Google-services.json file (steps 1-3 of [Firebase Android documentation](https://firebase.google.com/docs/android/setup))  
 and place it into android/app folder
 
-get GoogleService-Info.plist file (steps 1-3 of [this documentation](https://firebase.google.com/docs/ios/setup))
-
+get GoogleService-Info.plist file (steps 1-3 of [this documentation](https://firebase.google.com/docs/ios/setup))  
 and place it into ios/app folder
 
-get FCM API Key:
-
+get FCM API Key:  
 go to [console firebase](https://console.firebase.google.com) -> your project -> project settings -> Cloud Messaging
 
-There you find in Cloud Messaging API section the Server Key value.
+There you find in Cloud Messaging API section the Server Key value.  
 This key needs to be stored in [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server#aculab-and-fcm-constants)
 
-handy link:
-
+handy link:  
 [react native firebase](https://rnfirebase.io/)
 
 ## Errors you may encounter
@@ -103,8 +99,7 @@ handy link:
 
 if android has problems to connect to the [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server) e.g. throws [TypeError: Network request failed] when registering user (fetch function) and iOS works, run:
 
-adb reverse tcp:serverPort tcp:serverPort
-
+adb reverse tcp:serverPort tcp:serverPort  
 for example if you server runs on port 3500, run:
 
 ```cmd
@@ -117,8 +112,7 @@ if multiple devices are connected, get list of devices:
 adb devices
 ```
 
-then run reverse command on particular device:
-
+then run reverse command on particular device:  
 adb -s deviceCodeFromListOfDevices reverse tcp:serverPort tcp:serverPort
 
 for example:
@@ -127,16 +121,11 @@ for example:
 adb -s ZY2243N2N6 reverse tcp:3500 tcp:3500
 ```
 
-android firebase messaging
-
-register you app on firebase console <https://console.firebase.google.com>
-
 ### iOS
 
 #### iOS Network error
 
-if iOS throws [TypeError: Network request failed] when registering user (fetch function)
-
+if iOS throws [TypeError: Network request failed] when registering user (fetch function)  
 make sure that the fetch function uses your machine's network internal IP found in networks eg. 192.168.0.19
 
 if the issue persists make sure your idb is up to date.
