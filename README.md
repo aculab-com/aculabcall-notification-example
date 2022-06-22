@@ -77,14 +77,19 @@ handy links:
 ### FCM
 
 Register the example app with firebase
+
 get Google-services.json file (steps 1-3 of [Firebase Android documentation](https://firebase.google.com/docs/android/setup))
+
 and place it into android/app folder
 
 get GoogleService-Info.plist file (steps 1-3 of [this documentation](https://firebase.google.com/docs/ios/setup))
+
 and place it into ios/app folder
 
 get FCM API Key:
+
 go to [console firebase](https://console.firebase.google.com) -> your project -> project settings -> Cloud Messaging
+
 There you find in Cloud Messaging API section the Server Key value.
 This key needs to be stored in [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server#aculab-and-fcm-constants)
 
@@ -92,7 +97,7 @@ handy link:
 
 [react native firebase](https://rnfirebase.io/)
 
-## Potential errors
+## Errors you may encounter
 
 ### Android
 
