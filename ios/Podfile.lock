@@ -337,7 +337,7 @@ PODS:
   - React-jsinspector (0.68.0)
   - React-logger (0.68.0):
     - glog
-  - react-native-aculab-client (1.0.3):
+  - react-native-aculab-client (1.1.0):
     - React-Core
     - react-native-webrtc
   - react-native-encrypted-storage (4.0.2):
@@ -660,7 +660,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 010a66edf644339f6da72b34208b070089680415
   React-jsinspector: 90f0bfd5d04e0b066c29216a110ffb9a6c34f23f
   React-logger: 8474fefa09d05f573a13c044cb0dfd751d4e52e3
-  react-native-aculab-client: 032c868cdba0f025285fbddc80420a4e6625123b
+  react-native-aculab-client: bd40a7600a74d18992e4f53192f4a0811559428f
   react-native-encrypted-storage: e78d848ce0fb663c2ce306e37921d026809322e6
   react-native-safe-area-context: f98b0b16d1546d208fc293b4661e3f81a895afd9
   react-native-webrtc: b8f2769386d51a6a8c89778478618fe311226bc3
