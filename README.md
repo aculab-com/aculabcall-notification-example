@@ -40,7 +40,7 @@ public void peerConnectionSendDTMF(String tone, int duration, int interToneGap, 
 you have to edit variable URL_BASE within middleware.ts file in order for requests to find your server.
 The variable expects string in format \<server IP>:\<server port>'
 
-for example
+for example:
 
 ```ts
 const URL_BASE = 'http://192.168.0.12:3500/';
@@ -67,10 +67,8 @@ curl -v --header "apns-topic: <App ID>.voip" --header "apns-push-type: voip" --h
 This certificate needs to be placed in the [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server#apple-apn).
 
 handy links:  
-[sending_notification_requests_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)
-
-[establishing_a_certificate-based_connection_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_certificate-based_connection_to_apns)
-
+[sending_notification_requests_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  
+[establishing_a_certificate-based_connection_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_certificate-based_connection_to_apns)  
 [sending_push_notifications_using_command-line_tools](https://developer.apple.com/documentation/usernotifications/sending_push_notifications_using_command-line_tools)
 
 ### FCM
@@ -126,9 +124,10 @@ adb -s ZY2243N2N6 reverse tcp:3500 tcp:3500
 #### iOS Network error
 
 if iOS throws [TypeError: Network request failed] when registering user (fetch function)  
-make sure that the fetch function uses your machine's network internal IP found in networks eg. 192.168.0.19
-
+make sure that the fetch function uses your machine's network internal IP found in networks eg. 192.168.0.19  
 if the issue persists make sure your idb is up to date.
+
+update idb command:
 
 ```cmd
 sudo pip3 install --upgrade fb-idb
@@ -136,7 +135,7 @@ sudo pip3 install --upgrade fb-idb
 
 #### iOS build error
 
-if build error
+if build error:
 
 ```objective-c
 (void)didUpdatePushCredentials:(PKPushCredentials *)credentials forType:(NSString *)type;     x expected type
