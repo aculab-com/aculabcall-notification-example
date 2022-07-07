@@ -695,21 +695,16 @@ class AcuCall extends AculabCall {
    * Run this function to register VoiP Push Notifications for iOS.
    */
   initializeVoipNotifications() {
-    // --- NOTE: You still need to subscribe / handle the rest events as usual.
-    // --- This is just a helper which cache and propagate early fired events if and only if for
-    // --- "the native events which DID fire BEFORE js bridge is initialed",
-    // --- it does NOT mean this will have events each time when the app reopened.
-
-    // ===== Step 1: subscribe `register` event =====
+    // ===== subscribe `register` event =====
     VoipPushNotification.addEventListener('register', (token) => {
-      // --- send token to your apn provider server
+      // uncomment the following line to log device token into metro console
+      // console.log('[ iOS Device token ]:', token);
       this.iosDeviceToken = token;
     });
 
-    // ===== Step 2: subscribe `notification` event =====
-    // --- this.onVoipPushNotificationReceived
+    // ===== subscribe `notification` event =====
+    // --- received VoIP notification on foreground
     VoipPushNotification.addEventListener('notification', (notification) => {
-      // --- when receive remote voip push, register your VoIP client, show local notification ... etc
       this.refreshWebRtcUser();
       this.setStatesNotificationCall(notification.uuid);
       this.answeredCall = {
@@ -724,11 +719,12 @@ class AcuCall extends AculabCall {
         sendNotification(this.answeredCall!);
       }
 
-      // --- optionally, if you `addCompletionHandler` from the native side, once you have done the js jobs to initiate a call, call `completion()`
+      // --- optionally, if you `addCompletionHandler` from the native side,
+      // once you have done the js jobs to initiate a call, call `completion()`
       // VoipPushNotification.onVoipNotificationCompleted(notification.uuid);
     });
 
-    // ===== Step 3: subscribe `didLoadWithEvents` event =====
+    // ===== subscribe `didLoadWithEvents` event =====
     VoipPushNotification.addEventListener('didLoadWithEvents', (events) => {
       // --- this will fire when there are events occurred before js bridge initialized
       // --- use this event to execute your event handler manually by event type
@@ -749,6 +745,7 @@ class AcuCall extends AculabCall {
             .RNVoipPushRemoteNotificationReceivedEvent
         ) {
           if (data.uuid) {
+            // triggered when app is awaken from killed state by VoIP notification
             this.setStatesNotificationCall(data.uuid);
             this.answeredCall = {
               uuid: data.uuid,
@@ -761,7 +758,7 @@ class AcuCall extends AculabCall {
       }
     });
 
-    // ===== Step 4: register =====
+    // ===== register =====
     // --- it will be no-op if you have subscribed before (like in native side)
     // --- but will fire `register` event if we have latest cashed voip token ( it may be empty if no token at all )
     VoipPushNotification.registerVoipToken(); // --- register token
@@ -770,7 +767,7 @@ class AcuCall extends AculabCall {
 
   /**
    * Head component
-   * @returns view
+   * @returns View
    */
   CallHeadComponent = () => {
     return (
