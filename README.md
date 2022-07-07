@@ -48,60 +48,58 @@ const URL_BASE = 'http://192.168.0.12:3500/';
 
 ## configure for notifications
 
-Note, this example uses Firebase Cloud Messaging (FCM) and Apple Voice over Internet Protocol (VoIP) notification. For this example application to work correctly you must set FCM for android and also for iOS (make sure you linked the FCM with Apple APN) as well as set up iOS VoIP Notifications.
+Note:  
+This example uses Firebase Cloud Messaging (FCM) and Apple Voice over Internet Protocol (VoIP) notification. For this example application to work correctly you must set FCM for android and also for iOS (make sure you linked the FCM with Apple APN) as well as set up iOS VoIP Notifications.
 
 Side note:  
 You can achieve the same results using only FCM notifications linked to Apple APN. Effectively you can not be using apple APN directly as this example does for [iOS incoming call notification](https://github.com/aculab-com/AculabCall-notification-server/blob/main/middleware/notificationHandler.ts#L10) (server side). To make it work correctly you will need to register CallKeep in [app's index](https://github.com/aculab-com/aculabcall-notification-example/blob/main/index.js) file and make use of FCM background messages to wake up the app on iOS. You can use the Android style of notifications as guidance for your code.
 
-### iOS VoIP
+1. ### iOS VoIP
 
-go to your developer apple account > Certificates
+    - go to [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action) -> Certificates, Identifiers & Profiles
+    - Create VoIP Services Certificate, download certificate, make.p12 file and from it make .pem file (You can take inspiration from [this guide's](https://medium.com/mindful-engineering/voice-over-internet-protocol-voip-801ee15c3722) Prepare to Receive VoIP Push Notifications section.)
 
-Create VoIP Services Certificate, download certificate, make.p12 file and from it make .pem file.
+    After you create VOIP.pem you can test if your VoIP notifications are working by running curl command bellow using terminal from folder where VOIP.pem file lives.  
+    Variables for this command can be found in following ways:  
+    **ios_bundle**: open ios/xcworkspace with Xcode.. your_app -> TARGETS - Your_app -> General - Bundle Identifier  
+    **device_token**: console log token variable within [VoipPushNotification 'register' event listener](https://github.com/aculab-com/aculabcall-notification-example/blob/main/src/AcuCall.tsx#L699) run the app on iOS and when initializeVoipNotifications() is called the device_token will log into the Metro console.
 
-You can follow take inspiration from [this guide's](https://medium.com/mindful-engineering/voice-over-internet-protocol-voip-801ee15c3722) Prepare to Receive VoIP Push Notifications section.
+    ```curl
+    curl -v --header "apns-topic: <ios_bundle>.voip" --header "apns-push-type: voip" --header "apns-id: 123e4567-e89b-12d3-a456-4266554400a0" --cert VOIP.pem:password --data '{"uuid":"123e4567-e89b-12d3-a456-4266554400a0", "callerName":"test", "handle":"some handle"}' --http2  https://api.sandbox.push.apple.com/3/device/<device_token>
+    ```
 
-After you create VOIP.pem you can test if your VoIP notifications are working by running curl command bellow using terminal from folder where VOIP.pem file lives. Variables for this command can be found in following ways:  
-get ios_bundle: open ios/xcworkspace with Xcode.. your_app -> TARGETS - Your_app -> General - Bundle Identifier  
-get device_token: console log token variable within [VoipPushNotification 'register' event listener](https://github.com/aculab-com/aculabcall-notification-example/blob/main/src/AcuCall.tsx#L704) run the app on iOS and when initializeVoipNotifications() is called the device_token will log into the Metro console.
+    This certificate needs to be placed in the [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server#apple-apn) in certificates folder.
 
-```curl
-curl -v --header "apns-topic: <ios_bundle>.voip" --header "apns-push-type: voip" --header "apns-id: 123e4567-e89b-12d3-a456-4266554400a0" --cert VOIP.pem:password --data '{"uuid":"123e4567-e89b-12d3-a456-4266554400a0", "callerName":"test", "handle":"some handle"}' --http2  https://api.sandbox.push.apple.com/3/device/<device_token>
-```
+    handy links:  
+    [sending_notification_requests_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  
+    [establishing_a_certificate-based_connection_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_certificate-based_connection_to_apns)  
+    [sending_push_notifications_using_command-line_tools](https://developer.apple.com/documentation/usernotifications/sending_push_notifications_using_command-line_tools)
 
-This certificate needs to be placed in the [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server#apple-apn) in certificates folder.
+2. ### FCM
 
-handy links:  
-[sending_notification_requests_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  
-[establishing_a_certificate-based_connection_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_certificate-based_connection_to_apns)  
-[sending_push_notifications_using_command-line_tools](https://developer.apple.com/documentation/usernotifications/sending_push_notifications_using_command-line_tools)
+    This example application is using Cloud Messaging API (Legacy)
+    register you app on [firebase console](https://console.firebase.google.com)
 
-### FCM
+    - Register the example app with firebase
+    - get **Google-services.json** file (steps 1-3 of [Firebase Android documentation](https://firebase.google.com/docs/android/setup)) and place it into **android/app** folder
 
-This example application is using Cloud Messaging API (Legacy)
-register you app on firebase console <https://console.firebase.google.com>
+    - get **GoogleService-Info.plist** file (steps 1-3 of [this documentation](https://firebase.google.com/docs/ios/setup)) and place it into ios/app folder
+    - Upload your **APNs authentication key** to Firebase.
+        If you don't already have an APNs authentication key, make sure to create one in the [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action).  
+        Certificates, Identifiers & Profiles -> Keys -> create new key -> Enter the key Name, select Apple Push Notification service (APNs) and click Continue -> click Register -> download the auth key.
 
-**Register the example app with firebase**  
-**get Google-services.json file** (steps 1-3 of [Firebase Android documentation](https://firebase.google.com/docs/android/setup))  
-and place it into android/app folder
+    1. Inside your project in the Firebase console, select the gear icon, select **Project Settings**, and then select the **Cloud Messaging** tab.
+    2. In **APNs authentication key** under **iOS app configuration**, click the **Upload** button.
+    3. Browse to the location where you saved your key, select it, and click **Open**. Add the key ID for the key (available in the [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action)) and click **Upload**.
 
-**get GoogleService-Info.plist file** (steps 1-3 of [this documentation](https://firebase.google.com/docs/ios/setup))  
-and place it into ios/app folder  
-**Upload your APNs authentication key** to Firebase. If you don't already have an APNs authentication key, make sure to create one in the [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action).  
-Certificates, Identifiers & Profiles -> Keys -> create new key -> Enter the key Name, select Apple Push Notification service (APNs) and click Continue -> click Register -> download the auth key.
+    - get **FCM API Key**:  
+        go to [console firebase](https://console.firebase.google.com) -> your project -> project settings -> Cloud Messaging
 
-1. Inside your project in the Firebase console, select the gear icon, select **Project Settings**, and then select the **Cloud Messaging** tab.
-2. In **APNs authentication key** under **iOS app configuration**, click the **Upload** button.
-3. Browse to the location where you saved your key, select it, and click **Open**. Add the key ID for the key (available in the [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action)) and click **Upload**.
+    There you find in Cloud Messaging API section the Server Key value.  
+    This key needs to be stored in [AculabCall-notification-server constants](https://github.com/aculab-com/AculabCall-notification-server#aculab-and-fcm-constants)
 
-get FCM API Key:  
-go to [console firebase](https://console.firebase.google.com) -> your project -> project settings -> Cloud Messaging
-
-There you find in Cloud Messaging API section the Server Key value.  
-This key needs to be stored in [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server#aculab-and-fcm-constants)
-
-handy link:  
-[react native firebase](https://rnfirebase.io/)
+    handy link:  
+    [react native firebase](https://rnfirebase.io/)
 
 ## Errors you may encounter
 
