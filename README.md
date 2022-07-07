@@ -60,8 +60,10 @@ You can achieve the same results using only FCM notifications linked to Apple AP
     - Create VoIP Services Certificate, download certificate, make.p12 file and from it make .pem file (You can take inspiration from [this guide's](https://medium.com/mindful-engineering/voice-over-internet-protocol-voip-801ee15c3722) Prepare to Receive VoIP Push Notifications section.)
 
     After you create VOIP.pem you can test if your VoIP notifications are working by running curl command bellow using terminal from folder where VOIP.pem file lives.  
-    Variables for this command can be found in following ways:  
-    **ios_bundle**: open ios/xcworkspace with Xcode.. your_app -> TARGETS - Your_app -> General - Bundle Identifier  
+    Variables for this command can be found in following ways:
+
+    **ios_bundle**: open ios/xcworkspace with Xcode.. your_app -> TARGETS - Your_app -> General - Bundle Identifier
+
     **device_token**: console log token variable within [VoipPushNotification 'register' event listener](https://github.com/aculab-com/aculabcall-notification-example/blob/main/src/AcuCall.tsx#L699) run the app on iOS and when initializeVoipNotifications() is called the device_token will log into the Metro console.
 
     ```curl
@@ -85,18 +87,18 @@ You can achieve the same results using only FCM notifications linked to Apple AP
 
     - get **GoogleService-Info.plist** file (steps 1-3 of [this documentation](https://firebase.google.com/docs/ios/setup)) and place it into ios/app folder
     - Upload your **APNs authentication key** to Firebase.
+
         If you don't already have an APNs authentication key, make sure to create one in the [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action).  
         Certificates, Identifiers & Profiles -> Keys -> create new key -> Enter the key Name, select Apple Push Notification service (APNs) and click Continue -> click Register -> download the auth key.
 
-    1. Inside your project in the Firebase console, select the gear icon, select **Project Settings**, and then select the **Cloud Messaging** tab.
-    2. In **APNs authentication key** under **iOS app configuration**, click the **Upload** button.
-    3. Browse to the location where you saved your key, select it, and click **Open**. Add the key ID for the key (available in the [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action)) and click **Upload**.
+        1. Inside your project in the Firebase console, select the gear icon, select **Project Settings**, and then select the **Cloud Messaging** tab.
+        2. In **APNs authentication key** under **iOS app configuration**, click the **Upload** button.
+        3. Browse to the location where you saved your key, select it, and click **Open**. Add the key ID for the key (available in the [Apple Developer Member Center](https://developer.apple.com/membercenter/index.action)) and click **Upload**.
 
     - get **FCM API Key**:  
         go to [console firebase](https://console.firebase.google.com) -> your project -> project settings -> Cloud Messaging
-
-    There you find in Cloud Messaging API section the Server Key value.  
-    This key needs to be stored in [AculabCall-notification-server constants](https://github.com/aculab-com/AculabCall-notification-server#aculab-and-fcm-constants)
+        There you find in Cloud Messaging API section the Server Key value.  
+        This key needs to be stored in [AculabCall-notification-server constants](https://github.com/aculab-com/AculabCall-notification-server#aculab-and-fcm-constants)
 
     handy link:  
     [react native firebase](https://rnfirebase.io/)
