@@ -2,15 +2,30 @@
 
 requires [AculabCall-notification-server](https://github.com/aculab-com/AculabCall-notification-server) set-up and running
 
+- [AculabCall push notification example app](#aculabcall-push-notification-example-app)
+  - [Install The Example App](#install-the-example-app)
+    - [Dependencies](#dependencies)
+    - [Pods](#pods)
+    - [Manually add DTMF method for android](#manually-add-dtmf-method-for-android)
+    - [Server Connection](#server-connection)
+  - [Configure for Notifications](#configure-for-notifications)
+  - [Testing](#testing)
+  - [Errors you may encounter](#errors-you-may-encounter)
+    - [Android](#android)
+    - [iOS](#ios)
+      - [iOS Network Error](#ios-network-error)
+      - [iOS Build Error](#ios-build-error)
+      - [iOS Signing Error](#ios-signing-error)
+
 ## Install The Example App
 
-### dependencies
+### Dependencies
 
 ```terminal
 npm install
 ```
 
-### pods
+### Pods
 
 ```terminal
 npx pod-install
@@ -35,7 +50,7 @@ public void peerConnectionSendDTMF(String tone, int duration, int interToneGap, 
 }
 ```
 
-### Server connection
+### Server Connection
 
 You have to edit variable URL_BASE within middleware.ts file in order for requests to find your server.
 The variable expects string in format \<server IP>:\<server port>'
@@ -46,7 +61,7 @@ for example:
 const URL_BASE = 'http://192.168.0.12:3500/';
 ```
 
-## configure for notifications
+## Configure for Notifications
 
 Note:  
 This example uses Firebase Cloud Messaging (FCM) and Apple Voice over Internet Protocol (VoIP) notification. For this example application to work correctly you must set FCM for android and also for iOS (make sure you linked the FCM with Apple APN) as well as set up iOS VoIP Notifications.
@@ -77,7 +92,7 @@ You can achieve the same results using only FCM notifications linked to Apple AP
     [establishing_a_certificate-based_connection_to_apns](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_certificate-based_connection_to_apns)  
     [sending_push_notifications_using_command-line_tools](https://developer.apple.com/documentation/usernotifications/sending_push_notifications_using_command-line_tools)
 
-2. ### FCM
+2. ### Firebase Cloud Messaging (FCM)
 
     This example application is using Cloud Messaging API (Legacy)
     register you app on [firebase console](https://console.firebase.google.com)
@@ -102,6 +117,12 @@ You can achieve the same results using only FCM notifications linked to Apple AP
 
     handy link:  
     [react native firebase](https://rnfirebase.io/)
+
+## Testing
+
+Please note that application launched from terminal/Xcode/Android Studio behaves as separate instance from app launched from the phone. For example if you run an app from Xcode, register user and then kill the app, calling the user starts an app instance which is not registered (uses different storage, therefore the user credentials are not found in the app and the app takes you to the registration screen, however they exist on the server). In this case you can manually delete the user from the server and register again.
+
+**Best testing practice is to install the app on the phone from terminal/Xcode/Android Studio, kill it and open it on the phone. This way you get the correct behavior.**
 
 ## Errors you may encounter
 
@@ -133,7 +154,7 @@ adb -s ZY2243N2N6 reverse tcp:3500 tcp:3500
 
 ### iOS
 
-#### iOS Network error
+#### iOS Network Error
 
 If iOS throws [TypeError: Network request failed] when registering user (fetch function)
 make sure that the fetch function uses your machine's network internal IP found in networks eg. 192.168.0.19
@@ -148,7 +169,7 @@ update idb by running following command from app's root folder:
 sudo pip3 install --upgrade fb-idb
 ```
 
-#### iOS build error
+#### iOS Build Error
 
 If build error:
 
@@ -159,13 +180,16 @@ If build error:
 
 I have encountered this error and narrowed it down to RNVoipPushNotification package missing PushKit import.
 
+Open the app xcworkspace in Xcode  
+Pods -> Development Pods -> RNVoipNotification -> RNVoipPushNotificationManager.h
+
 add to RNVoipPushNotificationManager.h
 
 ```objective-c
 #import <PushKit/PushKit.h>
 ```
 
-#### iOS signing error
+#### iOS Signing Error
 
 If you encounter error:
 
