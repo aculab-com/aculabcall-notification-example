@@ -159,7 +159,7 @@ adb -s ZY2243N2N6 reverse tcp:3500 tcp:3500
 If iOS throws [TypeError: Network request failed] when registering user (fetch function)
 make sure that the fetch function uses your machine's network internal IP found in networks eg. 192.168.0.19
 
-I have encountered this issue while I was using localhost and local host IP (127.0.0.1).
+We have encountered this issue while we were using localhost and local host IP (127.0.0.1).
 
 If the issue persists make sure your [iOS development bridge (idb)](https://fbidb.io/docs/overview) is up to date.
 
@@ -178,7 +178,7 @@ If build error:
 (void)didReceiveIncomingPushWithPayload:(PKPushPayload *)payload forType:(NSString *)type;    x expected type
 ```
 
-I have encountered this error and narrowed it down to RNVoipPushNotification package missing PushKit import.
+We have encountered this error and narrowed it down to RNVoipPushNotification package missing PushKit import.
 
 Open the app xcworkspace in Xcode  
 Pods -> Development Pods -> RNVoipNotification -> RNVoipPushNotificationManager.h
