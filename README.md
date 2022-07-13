@@ -64,10 +64,10 @@ const URL_BASE = 'http://192.168.0.12:3500/';
 ## Configure for Notifications
 
 Note:  
-This example uses Firebase Cloud Messaging (FCM) and Apple Voice over Internet Protocol (VoIP) notification. For this example application to work correctly you must set FCM for android and also for iOS (make sure you linked the FCM with Apple APN) as well as set up iOS VoIP Notifications.
+This example uses Firebase Cloud Messaging (FCM) and Apple Voice over Internet Protocol (VoIP) notification. For this example application to work correctly you must set FCM for android and also for iOS (make sure you linked the FCM with Apple Push Notification service (APNs)) as well as set up iOS VoIP Notifications.
 
 Side note:  
-You can achieve the same results using only FCM notifications linked to Apple APN. Effectively you can not be using apple APN directly as this example does for [iOS incoming call notification](https://github.com/aculab-com/AculabCall-notification-server/blob/main/middleware/notificationHandler.ts#L10) (server side). To make it work correctly you will need to register CallKeep in [app's index](https://github.com/aculab-com/aculabcall-notification-example/blob/main/index.js) file and make use of FCM background messages to wake up the app on iOS. You can use the Android style of notifications as guidance for your code.
+You can achieve the same results using only FCM notifications linked to Apple APNs. Effectively you can not be using apple APNs directly as this example does for [iOS incoming call notification](https://github.com/aculab-com/AculabCall-notification-server/blob/main/middleware/notificationHandler.ts#L10) (server side). To make it work correctly you will need to register CallKeep in [app's index](https://github.com/aculab-com/aculabcall-notification-example/blob/main/index.js) file and make use of FCM background messages to wake up the app on iOS. You can use the Android style of notifications as guidance for your code.
 
 1. ### iOS VoIP
 
