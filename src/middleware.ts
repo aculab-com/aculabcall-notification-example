@@ -8,8 +8,8 @@ import type { Notification, User } from './types';
 const platform = Platform.OS;
 
 // Notification server base url
-const URL_BASE = 'http://192.168.1.152:3500/';
-// const URL_BASE = 'http://192.168.0.12:3500/';
+// const URL_BASE = 'http://192.168.1.152:3500/';
+const URL_BASE = 'http://192.168.0.17:3500/';
 
 /**
  * create new user on the server

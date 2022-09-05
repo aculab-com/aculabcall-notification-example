@@ -52,7 +52,7 @@ public void peerConnectionSendDTMF(String tone, int duration, int interToneGap, 
 
 ### Server Connection
 
-You have to edit variable URL_BASE within middleware.ts file in order for requests to find your server.
+You have to edit variable URL_BASE within src/middleware.ts file in order for requests to find your server.
 The variable expects string in format \<server IP>:\<server port>'
 
 for example:
