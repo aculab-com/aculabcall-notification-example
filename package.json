@@ -1,6 +1,6 @@
 {
   "name": "aculabcallnotificationsexample",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -14,9 +14,8 @@
     "@react-native-firebase/messaging": "^14.9.3",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.1",
-    "react": "17.0.2",
     "react-native": "0.68.0",
-    "react-native-aculab-client": "file:react-native-aculab-client-1.1.0.tgz",
+    "react-native-aculab-client": "^1.1.0-beta",
     "react-native-callkeep": "^4.3.2",
     "react-native-encrypted-storage": "^4.0.2",
     "react-native-gesture-handler": "^2.3.2",
